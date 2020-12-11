@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Linq;
+using Domino42;
 
 namespace Assets.Scripts.FSM.States
 {
