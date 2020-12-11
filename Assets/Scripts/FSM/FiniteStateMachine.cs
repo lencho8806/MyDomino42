@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using Domino42;
 
 namespace Assets.Scripts.FSM
 {
@@ -22,7 +23,7 @@ namespace Assets.Scripts.FSM
 
             _fsmStates = new Dictionary<FSMStateType, AbstractFSMState>();
 
-            Domino42 domino42 = this.GetComponent<Domino42>();
+            Game domino42 = this.GetComponent<Game>();
             
             foreach (AbstractFSMState state in _vallidStates)
             {

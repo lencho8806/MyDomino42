@@ -2,55 +2,58 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UpdateSprite : MonoBehaviour
+namespace Domino42
 {
-    public Sprite dominoFace;
-    public Sprite dominoBack;
-    private SpriteRenderer spriteRenderer;
-    private Selectable selectable;
-    private Domino42 domino42;
-    private UserInput userInput;
-
-    // Start is called before the first frame update
-    void Start()
+    public class UpdateSprite : MonoBehaviour
     {
-        List<string> deck = Domino42.GenerateDeck();
-        domino42 = FindObjectOfType<Domino42>();
-        userInput = FindObjectOfType<UserInput>();
+        public Sprite dominoFace;
+        public Sprite dominoBack;
+        private SpriteRenderer spriteRenderer;
+        private Selectable selectable;
+        private Game domino42;
+        private UserInput userInput;
 
-        int i = 0;
-        foreach(string domino in deck)
+        // Start is called before the first frame update
+        void Start()
         {
-            if (this.name == domino)
+            List<string> deck = Game.GenerateDeck();
+            domino42 = FindObjectOfType<Game>();
+            userInput = FindObjectOfType<UserInput>();
+
+            int i = 0;
+            foreach (string domino in deck)
             {
-                dominoFace = domino42.dominoFaces[i];
-                break;
+                if (this.name == domino)
+                {
+                    dominoFace = domino42.dominoFaces[i];
+                    break;
+                }
+                i++;
             }
-            i++;
-        }
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        selectable = GetComponent<Selectable>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (selectable.faceUp == true)
-        {
-            spriteRenderer.sprite = dominoFace;
-        }
-        else
-        {
-            spriteRenderer.sprite = dominoBack;
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            selectable = GetComponent<Selectable>();
         }
 
-        if (name == userInput.prevObjectClicked.name)
+        // Update is called once per frame
+        void Update()
         {
-            spriteRenderer.color = Color.yellow;
-        }
-        else
-        {
-            spriteRenderer.color = Color.white;
+            if (selectable.faceUp == true)
+            {
+                spriteRenderer.sprite = dominoFace;
+            }
+            else
+            {
+                spriteRenderer.sprite = dominoBack;
+            }
+
+            if (name == userInput.prevObjectClicked.name)
+            {
+                spriteRenderer.color = Color.yellow;
+            }
+            else
+            {
+                spriteRenderer.color = Color.white;
+            }
         }
     }
 }
