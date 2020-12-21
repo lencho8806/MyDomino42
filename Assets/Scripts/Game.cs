@@ -59,6 +59,10 @@ namespace Domino42
 
         public WinLoseMenu winLoseMenu;
 
+        public List<Text> PlayerNames = new List<Text>();
+
+        public Text MessageText;
+
         public enum GameState
         {
             Idle,
@@ -79,6 +83,13 @@ namespace Domino42
         // Start is called before the first frame update
         void Start()
         {
+            for (int i = 0; i < 4; i++)
+            {
+                players[i].name = PlayerNames[i].text;
+            }
+
+            MessageText.text = string.Empty;
+
             gameState = GameState.Shuffle;
 
             GameFlow();
@@ -507,11 +518,15 @@ namespace Domino42
             else if (!players[CurrentPlayerTurn].IsAI)
             {
                 // Player bid
+                MessageText.text = string.Empty;
+
                 bidMenu.BidStart();
             }
             else
             {
                 // AI bid
+                MessageText.text = $"{players[CurrentPlayerTurn].name} is bidding...";
+
                 BidEnumerator(CurrentPlayerTurn);
             }
         }
@@ -582,11 +597,15 @@ namespace Domino42
             else if (!players[CurrentPlayerTurn].IsAI)
             {
                 // Player trump
+                MessageText.text = string.Empty;
+
                 trumpMenu.TrumpStart();
             }
             else
             {
                 // AI trump
+                MessageText.text = $"{players[CurrentPlayerTurn].name} is selecting trump...";
+
                 TrumpEnumerator(CurrentPlayerTurn);
             }
         }
@@ -650,11 +669,15 @@ namespace Domino42
             else if (!players[CurrentPlayerTurn].IsAI)
             {
                 // Player bid
+                MessageText.text = string.Empty;
+
                 //_domino42.bidMenu.BidStart();
             }
             else
             {
                 // AI bid
+                MessageText.text = $"{players[CurrentPlayerTurn].name}'s turn...";
+
                 PlayEnumerator(CurrentPlayerTurn);
             }
         }
@@ -800,12 +823,16 @@ namespace Domino42
                 // Us
                 RoundScoreUs += GetGameScore() + 1;
                 RoundUsText.text = $"Us: {RoundScoreUs}";
+
+                MessageText.text = $"We won the round...";
             }
             else
             {
                 // Them
                 RoundScoreThem += GetGameScore() + 1;
                 RoundThemText.text = $"Them: {RoundScoreThem}";
+
+                MessageText.text = $"They won the round...";
             }
 
             InitialPlayerTurn = playerWinnerIndex;
@@ -956,12 +983,16 @@ namespace Domino42
                     SetScoreUs += 1;
                     SetUsText.text = $"Us: {SetScoreUs}";
                     SetComplete = true;
+
+                    MessageText.text = $"We won the set";
                 }
                 else if (RoundScoreThem > (42 - CurrentBidAmount))
                 {
                     SetScoreThem += 1;
                     SetThemText.text = $"Them: {SetScoreThem}";
                     SetComplete = true;
+
+                    MessageText.text = $"They won the set";
                 }
             }
             else
