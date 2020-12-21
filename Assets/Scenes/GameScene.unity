@@ -332,6 +332,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Hand: []
   IsDealer: 0
+  IsAI: 1
   Id: 1
   TurnComplete: 0
   SelectedDomino: {fileID: 0}
@@ -533,6 +534,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Hand: []
   IsDealer: 0
+  IsAI: 1
   Id: 3
   TurnComplete: 0
   SelectedDomino: {fileID: 0}
@@ -1206,7 +1208,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 336068634}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e352cdd90a0ee2f4e98d6d5b009b0bec, type: 3}
   m_Name: 
@@ -1912,6 +1914,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Hand: []
   IsDealer: 0
+  IsAI: 1
   Id: 2
   TurnComplete: 0
   SelectedDomino: {fileID: 0}
@@ -2892,6 +2895,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Hand: []
   IsDealer: 1
+  IsAI: 0
   Id: 0
   TurnComplete: 0
   SelectedDomino: {fileID: 0}

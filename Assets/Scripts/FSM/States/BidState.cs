@@ -49,7 +49,7 @@ namespace Assets.Scripts.FSM.States
                 else
                 {
                     // AI bid
-                    _domino42.Bid(playerIndex);
+                    //_domino42.Bid(playerIndex);
                 }
             }
 
