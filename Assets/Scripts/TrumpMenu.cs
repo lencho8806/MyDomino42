@@ -8,6 +8,7 @@ namespace Domino42
 {
     public class TrumpMenu : MonoBehaviour
     {
+        private Game domino42;
         public static bool GameIsTrump = false;
         private int Trump = 0;
 
@@ -16,7 +17,9 @@ namespace Domino42
 
         void Start()
         {
+            //probably need to reset values...
 
+            domino42 = FindObjectOfType<Game>();
         }
 
         // Update is called once per frame
@@ -89,8 +92,8 @@ namespace Domino42
 
         public void TrumpEnd()
         {
-            var domino42 = FindObjectOfType<Game>();
-            domino42.players[0].Trump = (Trump)Trump;
+            //var domino42 = FindObjectOfType<Game>();
+            domino42.players[domino42.CurrentPlayerTurn].Trump = (Trump)Trump;
             domino42.Trump = (Trump)Trump;
 
             domino42.trumpText.text = domino42.Trump.ToString();
@@ -109,11 +112,11 @@ namespace Domino42
 
         private int DefaultTrump()
         {
-            var domino42 = FindObjectOfType<Game>();
+            //var domino42 = FindObjectOfType<Game>();
 
             // get list of nums to determine trump
             List<string> dominoNums = new List<string>();
-            domino42.players[0].Hand.ForEach(domino =>
+            domino42.players[domino42.CurrentPlayerTurn].Hand.ForEach(domino =>
             {
                 var dominoSplit = domino.Split('_');
                 dominoNums.Add(dominoSplit[0]);

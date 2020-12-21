@@ -52,7 +52,7 @@ namespace Assets.Scripts.FSM.States
                 else
                 {
                     // AI trump
-                    _domino42.SetTrump(playerBidIndex);
+                    //_domino42.SetTrump(playerBidIndex);
                 }
             }
 

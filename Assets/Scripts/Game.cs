@@ -59,20 +59,244 @@ namespace Domino42
 
         public WinLoseMenu winLoseMenu;
 
+        public List<Text> PlayerNames = new List<Text>();
+
+        public Text MessageText;
+
+        public enum GameState
+        {
+            Idle,
+            Shuffle,
+            Deal,
+            Bid,
+            Trump,
+            Play,
+            RoundWinner,
+            SetWinner,
+            Win,
+            Lose
+        };
+
+        protected GameState gameState = GameState.Idle;
+        public GameState CurrGameState { get { return gameState; } }
+
         // Start is called before the first frame update
         void Start()
         {
-            // Make sure user input script for game is disabled
-            //GetComponent<UserInput>().enabled = false;
+            for (int i = 0; i < 4; i++)
+            {
+                players[i].name = PlayerNames[i].text;
+            }
 
-            // Generate deck; shuffle; deal
-            //StartCoroutine(PlayDominoes());
+            MessageText.text = string.Empty;
+
+            gameState = GameState.Shuffle;
+
+            GameFlow();
         }
 
         // Update is called once per frame
         void Update()
         {
+            switch (gameState)
+            {
+                case GameState.Deal:
+                    {
+                        if (IsDealing == false)
+                        {
+                            gameState = GameState.Bid;
 
+                            GameFlow();
+                        }
+                        break;
+                    }
+                case GameState.Bid:
+                    {
+                        if (players[CurrentPlayerTurn].BidAmount != null)
+                        {
+                            if (players.Exists(player => player.BidAmount == null))
+                            {
+                                GameFlow();
+                            }
+                            else
+                            {
+                                gameState = GameState.Trump;
+                                GameFlow();
+                            }
+                        }
+                        break;
+                    }
+                case GameState.Trump:
+                    {
+                        if (players[CurrentPlayerTurn].Trump != null)
+                        {
+                            InitialPlayerTurn = CurrentPlayerTurn;
+
+                            gameState = GameState.Play;
+                            GameFlow();
+                        }
+                        break;
+                    }
+                case GameState.Play:
+                    {
+                        if (players[CurrentPlayerTurn].TurnComplete)
+                        {
+                            if (players.Exists(player => player.TurnComplete == false))
+                            {
+                                // Hand not finished
+                                GameFlow();
+                            }
+                            else
+                            {
+                                gameState = GameState.RoundWinner;
+                                GameFlow();
+                            }
+                        }
+                        break;
+                    }
+                case GameState.RoundWinner:
+                    {
+                        if (RoundComplete)
+                        {
+                            gameState = GameState.SetWinner;
+                            GameFlow();
+                        }
+                        break;
+                    }
+                case GameState.SetWinner:
+                    {
+                        if (SetComplete != null)
+                        {
+                            if (SetComplete == true)
+                            {
+                                if (SetScoreUs >= 3)
+                                {
+                                    gameState = GameState.Win;
+                                    GameFlow();
+                                }
+                                else if (SetScoreThem >= 3)
+                                {
+                                    gameState = GameState.Lose;
+                                    GameFlow();
+                                }
+                                else
+                                {
+                                    ResetSet();
+
+                                    gameState = GameState.Shuffle;
+                                    GameFlow();
+                                }
+                            }
+                            else
+                            {
+                                ResetRound();
+
+                                gameState = GameState.Play;
+                                GameFlow();
+                            }
+                        }
+                        break;
+                    }
+                case GameState.Win:
+                    {
+                        if (winLoseMenu.Next != null)
+                        {
+                            if (winLoseMenu.Next == "RESTART")
+                            {
+                                ResetMatch();
+
+                                gameState = GameState.Shuffle;
+                                GameFlow();
+                            }
+                        }
+                        break;
+                    }
+                case GameState.Lose:
+                    {
+                        if (winLoseMenu.Next != null)
+                        {
+                            if (winLoseMenu.Next == "RESTART")
+                            {
+                                ResetMatch();
+
+                                gameState = GameState.Shuffle;
+                                GameFlow();
+                            }
+                        }
+                        break;
+                    }
+            }
+        }
+
+        public virtual void GameFlow()
+        {
+            switch(gameState)
+            {
+                case GameState.Idle:
+                    {
+                        Debug.Log("IDLE");
+                        break;
+                    }
+                case GameState.Shuffle:
+                    {
+                        Debug.Log("SHUFFLE");
+                        Shuffle();
+                        break;
+                    }
+                case GameState.Deal:
+                    {
+                        Debug.Log("DEAL");
+                        //IsDealing = true;
+                        Deal();
+                        break;
+                    }
+                case GameState.Bid:
+                    {
+                        Debug.Log("BID");
+                        Bid();
+                        break;
+                    }
+                case GameState.Trump:
+                    {
+                        Debug.Log("TRUMP");
+                        SetTrump();
+                        break;
+                    }
+                case GameState.Play:
+                    {
+                        Debug.Log("PLAY");
+                        SetPlay();
+                        break;
+                    }
+                case GameState.RoundWinner:
+                    {
+                        Debug.Log("ROUND WINNER");
+                        RoundWinner();
+                        break;
+                    }
+                case GameState.SetWinner:
+                    {
+                        Debug.Log("SET WINNER");
+                        SetWinner();
+                        break;
+                    }
+                case GameState.Win:
+                    {
+                        Debug.Log("WIN");
+
+                        winLoseMenu.WinLoseStart("You Won!!!");
+
+                        break;
+                    }
+                case GameState.Lose:
+                    {
+                        Debug.Log("LOSE");
+
+                        winLoseMenu.WinLoseStart("You Lost...");
+
+                        break;
+                    }
+            }
         }
 
         // Shuffle
@@ -80,6 +304,9 @@ namespace Domino42
         {
             deck = GenerateDeck();
             Shuffle(deck);
+
+            gameState = GameState.Deal;
+            GameFlow();
         }
 
         public static List<string> GenerateDeck()
@@ -109,6 +336,8 @@ namespace Domino42
         // Deal
         public void Deal()
         {
+            IsDealing = true;
+
             StartCoroutine(DominoDeal());
         }
 
@@ -265,10 +494,41 @@ namespace Domino42
             IsDealing = false;
         }
 
-        // Bid - AI
-        public void Bid(int playerIndex)
+        // Bid
+        public void Bid()
         {
-            BidEnumerator(playerIndex);
+            int dealerIndex = players.FindIndex(player => player.IsDealer);
+            CurrentPlayerTurn = -1;
+
+            for (int i = (dealerIndex + 1); i < ((dealerIndex + 1) + 4); i++)
+            {
+                if (players[i % 4].BidComplete == false)
+                {
+                    CurrentPlayerTurn = i % 4;
+                    break;
+                }
+            }
+
+            if (CurrentPlayerTurn == -1)
+            {
+                // why? go to the next section
+                gameState = GameState.Trump;
+                GameFlow();
+            }
+            else if (!players[CurrentPlayerTurn].IsAI)
+            {
+                // Player bid
+                MessageText.text = string.Empty;
+
+                bidMenu.BidStart();
+            }
+            else
+            {
+                // AI bid
+                MessageText.text = $"{players[CurrentPlayerTurn].name} is bidding...";
+
+                BidEnumerator(CurrentPlayerTurn);
+            }
         }
 
         void BidEnumerator(int playerIndex)
@@ -312,9 +572,42 @@ namespace Domino42
         }
 
         // Trump - AI
-        public void SetTrump(int playerIndex)
+        public void SetTrump()
         {
-            TrumpEnumerator(playerIndex);
+            int maxBid = -100; // as to not interfere with pass (-1)
+            CurrentPlayerTurn = -1;
+            for (int i = 0; i < players.Count; i++)
+            {
+                if (players[i].BidAmount > maxBid)
+                {
+                    maxBid = players[i].BidAmount.Value;
+                    CurrentPlayerTurn = i;
+                }
+            }
+
+            CurrentBidAmount = maxBid;
+            WhoBid = CurrentPlayerTurn;
+
+            if (CurrentPlayerTurn == -1)
+            {
+                // why? go to the next section
+                gameState = GameState.Play;
+                GameFlow();
+            }
+            else if (!players[CurrentPlayerTurn].IsAI)
+            {
+                // Player trump
+                MessageText.text = string.Empty;
+
+                trumpMenu.TrumpStart();
+            }
+            else
+            {
+                // AI trump
+                MessageText.text = $"{players[CurrentPlayerTurn].name} is selecting trump...";
+
+                TrumpEnumerator(CurrentPlayerTurn);
+            }
         }
 
         void TrumpEnumerator(int playerIndex)
@@ -355,9 +648,38 @@ namespace Domino42
         }
 
         // Play - AI
-        public void SetPlay(int playerIndex)
+        public void SetPlay()
         {
-            PlayEnumerator(playerIndex);
+            CurrentPlayerTurn = -1;
+            for (int i = InitialPlayerTurn; i < (InitialPlayerTurn + 4); i++)
+            {
+                if (players[i % 4].TurnComplete == false)
+                {
+                    CurrentPlayerTurn = i % 4;
+                    break;
+                }
+            }
+            
+            if (CurrentPlayerTurn == -1)
+            {
+                //determine Game winner
+                gameState = GameState.RoundWinner;
+                GameFlow();
+            }
+            else if (!players[CurrentPlayerTurn].IsAI)
+            {
+                // Player bid
+                MessageText.text = string.Empty;
+
+                //_domino42.bidMenu.BidStart();
+            }
+            else
+            {
+                // AI bid
+                MessageText.text = $"{players[CurrentPlayerTurn].name}'s turn...";
+
+                PlayEnumerator(CurrentPlayerTurn);
+            }
         }
 
         void PlayEnumerator(int playerIndex)
@@ -501,12 +823,16 @@ namespace Domino42
                 // Us
                 RoundScoreUs += GetGameScore() + 1;
                 RoundUsText.text = $"Us: {RoundScoreUs}";
+
+                MessageText.text = $"We won the round...";
             }
             else
             {
                 // Them
                 RoundScoreThem += GetGameScore() + 1;
                 RoundThemText.text = $"Them: {RoundScoreThem}";
+
+                MessageText.text = $"They won the round...";
             }
 
             InitialPlayerTurn = playerWinnerIndex;
@@ -657,12 +983,16 @@ namespace Domino42
                     SetScoreUs += 1;
                     SetUsText.text = $"Us: {SetScoreUs}";
                     SetComplete = true;
+
+                    MessageText.text = $"We won the set";
                 }
                 else if (RoundScoreThem > (42 - CurrentBidAmount))
                 {
                     SetScoreThem += 1;
                     SetThemText.text = $"Them: {SetScoreThem}";
                     SetComplete = true;
+
+                    MessageText.text = $"They won the set";
                 }
             }
             else

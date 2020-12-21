@@ -11,11 +11,16 @@ namespace Domino42
         public bool GameIsBid = false;
         private int Amount = 30;
         private Text textAmount;
+        private Game domino42;
 
         public GameObject bidMenuUI;
 
         void Start()
         {
+            // probably need to reset values...
+
+            domino42 = FindObjectOfType<Game>();
+
             var textChildren = new List<Text>(bidMenuUI.GetComponentsInChildren<Text>());
             textAmount = textChildren.Find(text => text.name == "BidAmountText");
         }
@@ -94,7 +99,7 @@ namespace Domino42
         {
             Debug.Log("Bid...");
 
-            var domino42 = FindObjectOfType<Game>();
+            //var domino42 = FindObjectOfType<Game>();
             int? maxBid = domino42.players.Max(player => player.BidAmount);
 
             if (maxBid.HasValue)
@@ -111,10 +116,10 @@ namespace Domino42
 
         public void BidEnd()
         {
-            var domino42 = FindObjectOfType<Game>();
-            domino42.players[0].BidAmount = Amount;
+            //var domino42 = FindObjectOfType<Game>();
+            domino42.players[domino42.CurrentPlayerTurn].BidAmount = Amount;
 
-            domino42.playerBidTexts[0].text = Amount.ToString();
+            domino42.playerBidTexts[domino42.CurrentPlayerTurn].text = Amount.ToString();
 
             bidMenuUI.SetActive(false);
             Time.timeScale = 1f;
