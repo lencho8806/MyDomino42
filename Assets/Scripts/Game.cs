@@ -24,6 +24,8 @@ namespace Domino42
     {
         public Sprite[] dominoFaces;
         public GameObject dominoPrefab;
+        [SerializeField]
+        protected DominoAnimator dominoAnimator;
         public List<Player> players = new List<Player>(4);
 
         public static string[] dominoes = new string[] { "0_0", "1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_3", "4_0", "4_1", "4_2", "4_3", "4_4", "5_0", "5_1", "5_2", "5_3", "5_4", "5_5", "6_0", "6_1", "6_2", "6_3", "6_4", "6_5", "6_6" };
@@ -106,13 +108,13 @@ namespace Domino42
                         {
                             gameState = GameState.Bid;
 
-                            GameFlow();
+                            //GameFlow();
                         }
                         break;
                     }
                 case GameState.Bid:
                     {
-                        if (players[CurrentPlayerTurn].BidAmount != null)
+                        if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidAmount != null)
                         {
                             if (players.Exists(player => player.BidAmount == null))
                             {
@@ -338,19 +340,104 @@ namespace Domino42
         {
             IsDealing = true;
 
-            StartCoroutine(DominoDeal());
-        }
-
-        IEnumerator DealEnumerator()
-        {
-            IsDealing = true;
-
-            yield return StartCoroutine(DominoDeal());
+            //StartCoroutine(DominoDeal());
+            DominoDeal();
+            DominoDealDealer();
 
             IsDealing = false;
         }
 
-        IEnumerator DominoDeal()
+        //IEnumerator DealEnumerator()
+        //{
+        //    IsDealing = true;
+
+        //    yield return StartCoroutine(DominoDeal());
+
+        //    IsDealing = false;
+        //}
+
+        //IEnumerator DominoDeal()
+        //{
+        //    IsDealing = true;
+
+        //    float yOffset = 1.0f;
+        //    float xOffset = 1.0f;
+        //    int i = 0;
+
+        //    foreach (string domino in deck)
+        //    {
+        //        yield return new WaitForSeconds(0.03f);
+
+        //        int index = i % 4;
+        //        if (players[index].IsDealer)
+        //        {
+        //            i++;
+        //            index = i % 4;
+        //        }
+
+        //        float xOffsetCalc = players[index].transform.childCount * xOffset;
+        //        float yOffsetCalc = 0f;
+        //        int direction = 1;
+
+        //        switch (index)
+        //        {
+        //            case 0:
+        //                //initialized values
+        //                break;
+        //            case 1:
+        //                xOffsetCalc = 0;
+        //                yOffsetCalc = players[index].transform.childCount * yOffset;
+        //                direction = -1;
+        //                break;
+        //            case 2:
+        //                xOffsetCalc = players[index].transform.childCount * xOffset;
+        //                yOffsetCalc = 0;
+        //                direction = -1;
+        //                break;
+        //            case 3:
+        //                xOffsetCalc = 0;
+        //                yOffsetCalc = players[index].transform.childCount * yOffset;
+        //                direction = 1;
+        //                break;
+        //        }
+
+        //        GameObject newDomino = Instantiate(
+        //            dominoPrefab,
+        //            new Vector3(0, 0, players[index].transform.position.z),
+        //            Quaternion.Euler(0, 0, 0),
+        //            players[index].transform
+        //        );
+        //        newDomino.name = domino;
+        //        newDomino.GetComponent<Selectable>().faceUp = true;
+
+        //        dominoAnimator.AddDominoAnimation(
+        //            newDomino,
+        //            new Vector2(
+        //                players[index].transform.position.x + (xOffsetCalc * direction),
+        //                players[index].transform.position.y + (yOffsetCalc * direction)),
+        //            Quaternion.Euler(0, 0, 90 * index));
+
+        //        i++;
+
+        //        discardPile.Add(domino);
+        //        players[index].Hand.Add(domino);
+
+        //        if (discardPile.Count >= 21) break;
+        //    }
+
+        //    foreach (string domino in discardPile)
+        //    {
+        //        if (deck.Contains(domino))
+        //        {
+        //            deck.Remove(domino);
+        //        }
+        //    }
+        //    discardPile.Clear();
+
+        //    StartCoroutine(DominoDealDealer());
+        //}
+
+        void DominoDeal()
         {
             IsDealing = true;
 
@@ -360,7 +447,7 @@ namespace Domino42
 
             foreach (string domino in deck)
             {
-                yield return new WaitForSeconds(0.03f);
+                //yield return new WaitForSeconds(0.03f);
 
                 int index = i % 4;
                 if (players[index].IsDealer)
@@ -397,15 +484,19 @@ namespace Domino42
 
                 GameObject newDomino = Instantiate(
                     dominoPrefab,
-                    new Vector3(
-                        players[index].transform.position.x + (xOffsetCalc * direction),
-                        players[index].transform.position.y + (yOffsetCalc * direction),
-                        players[index].transform.position.z),
-                    Quaternion.Euler(0, 0, 90 * index),
+                    new Vector3(0, 0, players[index].transform.position.z),
+                    Quaternion.Euler(0, 0, 0),
                     players[index].transform
                 );
                 newDomino.name = domino;
                 newDomino.GetComponent<Selectable>().faceUp = true;
+
+                dominoAnimator.AddDominoAnimation(
+                    newDomino,
+                    new Vector2(
+                        players[index].transform.position.x + (xOffsetCalc * direction),
+                        players[index].transform.position.y + (yOffsetCalc * direction)),
+                    Quaternion.Euler(0, 0, 90 * index));
 
                 i++;
 
@@ -424,10 +515,83 @@ namespace Domino42
             }
             discardPile.Clear();
 
-            StartCoroutine(DominoDealDealer());
+            //StartCoroutine(DominoDealDealer());
         }
 
-        IEnumerator DominoDealDealer()
+        //IEnumerator DominoDealDealer()
+        //{
+        //    float yOffset = 1.0f;
+        //    float xOffset = 1.0f;
+
+        //    int index = players.FindIndex(player => player.IsDealer);
+
+        //    float xOffsetCalc = players[index].transform.childCount * xOffset;
+        //    float yOffsetCalc = 0f;
+        //    int direction = 1;
+
+        //    foreach (string domino in deck)
+        //    {
+        //        yield return new WaitForSeconds(0.03f);
+
+        //        switch (index)
+        //        {
+        //            case 0:
+        //                xOffsetCalc = players[index].transform.childCount * xOffset;
+        //                yOffsetCalc = 0f;
+        //                direction = 1;
+        //                break;
+        //            case 1:
+        //                xOffsetCalc = 0;
+        //                yOffsetCalc = players[index].transform.childCount * yOffset;
+        //                direction = -1;
+        //                break;
+        //            case 2:
+        //                xOffsetCalc = players[index].transform.childCount * xOffset;
+        //                yOffsetCalc = 0;
+        //                direction = -1;
+        //                break;
+        //            case 3:
+        //                xOffsetCalc = 0;
+        //                yOffsetCalc = players[index].transform.childCount * yOffset;
+        //                direction = 1;
+        //                break;
+        //        }
+
+        //        GameObject newDomino = Instantiate(
+        //            dominoPrefab,
+        //            new Vector3(0, 0, players[index].transform.position.z),
+        //            Quaternion.Euler(0, 0, 0),
+        //            players[index].transform
+        //        );
+        //        newDomino.name = domino;
+        //        newDomino.GetComponent<Selectable>().faceUp = true;
+
+        //        dominoAnimator.AddDominoAnimation(
+        //            newDomino,
+        //            new Vector2(
+        //                players[index].transform.position.x + (xOffsetCalc * direction),
+        //                players[index].transform.position.y + (yOffsetCalc * direction)),
+        //            Quaternion.Euler(0, 0, 90 * index));
+
+        //        discardPile.Add(domino);
+        //        players[index].Hand.Add(domino);
+        //    }
+
+        //    foreach (string domino in discardPile)
+        //    {
+        //        if (deck.Contains(domino))
+        //        {
+        //            deck.Remove(domino);
+        //        }
+        //    }
+        //    discardPile.Clear();
+
+        //    IsDealing = false;
+        //}
+
+        // Bid
+
+        void DominoDealDealer()
         {
             float yOffset = 1.0f;
             float xOffset = 1.0f;
@@ -440,7 +604,7 @@ namespace Domino42
 
             foreach (string domino in deck)
             {
-                yield return new WaitForSeconds(0.03f);
+                //yield return new WaitForSeconds(0.03f);
 
                 switch (index)
                 {
@@ -468,15 +632,19 @@ namespace Domino42
 
                 GameObject newDomino = Instantiate(
                     dominoPrefab,
-                    new Vector3(
-                        players[index].transform.position.x + (xOffsetCalc * direction),
-                        players[index].transform.position.y + (yOffsetCalc * direction),
-                        players[index].transform.position.z),
-                    Quaternion.Euler(0, 0, 90 * index),
+                    new Vector3(0, 0, players[index].transform.position.z),
+                    Quaternion.Euler(0, 0, 0),
                     players[index].transform
                 );
                 newDomino.name = domino;
                 newDomino.GetComponent<Selectable>().faceUp = true;
+
+                dominoAnimator.AddDominoAnimation(
+                    newDomino,
+                    new Vector2(
+                        players[index].transform.position.x + (xOffsetCalc * direction),
+                        players[index].transform.position.y + (yOffsetCalc * direction)),
+                    Quaternion.Euler(0, 0, 90 * index));
 
                 discardPile.Add(domino);
                 players[index].Hand.Add(domino);
@@ -494,7 +662,6 @@ namespace Domino42
             IsDealing = false;
         }
 
-        // Bid
         public void Bid()
         {
             int dealerIndex = players.FindIndex(player => player.IsDealer);
@@ -769,6 +936,9 @@ namespace Domino42
             var selectedDominoGameObject = players[playerIndex].transform.Find(selectedDomino).gameObject;
             var selectableDomino = selectedDominoGameObject.GetComponent<Selectable>();
 
+            Vector3 initPos = selectedDominoGameObject.transform.position;
+            Quaternion initRot = selectedDominoGameObject.transform.rotation;
+
             // Remove domino from hand
             Destroy(selectedDominoGameObject);
             players[playerIndex].Hand.Remove(selectedDomino);
@@ -776,12 +946,20 @@ namespace Domino42
             // Move domino to play area
             GameObject newDomino = Instantiate(
                 dominoPrefab,
-                playerSpots[playerIndex].transform.position,
-                Quaternion.Euler(0, 0, 90),
+                initPos,
+                initRot,
                 playerSpots[playerIndex].transform
             );
             newDomino.name = selectedDomino;
             newDomino.GetComponent<Selectable>().faceUp = true;
+
+            dominoAnimator.AddDominoAnimation(
+                newDomino,
+                new Vector2(
+                    playerSpots[playerIndex].transform.position.x,
+                    playerSpots[playerIndex].transform.position.y),
+                Quaternion.Euler(0, 0, 90),
+                false);
 
             players[playerIndex].TurnComplete = true;
             players[playerIndex].SelectedDomino = selectableDomino;
@@ -1012,6 +1190,12 @@ namespace Domino42
             }
 
             SetComplete = SetComplete == null ? false : SetComplete;
+        }
+
+        //****************** Animator Event *********************//
+        public virtual void AllAnimationsFinished()
+        {
+            GameFlow();
         }
     }
 
