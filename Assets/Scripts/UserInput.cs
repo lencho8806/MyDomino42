@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.FSM;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,13 +12,10 @@ namespace Domino42
 
         [SerializeField]
         Game domino42;
-        FiniteStateMachine fsm;
 
         // Start is called before the first frame update
         void Start()
         {
-            fsm = domino42.GetComponent<FiniteStateMachine>();
-
             prevObjectClicked = this.gameObject;
         }
 

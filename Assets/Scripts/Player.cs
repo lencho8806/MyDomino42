@@ -9,7 +9,7 @@ namespace Domino42
         public List<string> Hand = new List<string>();
         public bool IsDealer = false;
         public bool IsAI = true;
-        public int Id;
+        public string Id;
         public int? BidAmount;
         public bool BidComplete { get { return BidAmount != null; } }
         public Domino42.Trump? Trump;

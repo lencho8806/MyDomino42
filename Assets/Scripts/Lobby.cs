@@ -244,6 +244,7 @@ namespace Domino42
         public void OnOnlineClicked()
         {
             Debug.Log("OnOnlineClicked");
+            LeaveRoom();
             ShowEnterNicknamePopover();
         }
 
