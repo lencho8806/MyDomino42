@@ -16,14 +16,15 @@ namespace Domino42
         // Start is called before the first frame update
         void Start()
         {
-            List<string> deck = Game.GenerateDeck();
             domino42 = FindObjectOfType<Game>();
             userInput = FindObjectOfType<UserInput>();
 
+            List<byte> deck = domino42.GenerateDeck();
+            
             int i = 0;
-            foreach (string domino in deck)
+            foreach (byte domino in deck)
             {
-                if (this.name == domino)
+                if (this.name == domino42.dominoes[domino])
                 {
                     dominoFace = domino42.dominoFaces[i];
                     break;

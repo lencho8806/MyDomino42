@@ -31,10 +31,10 @@ namespace Domino42
         protected DominoAnimator dominoAnimator;
         public List<Player> players = new List<Player>(4);
 
-        public static string[] dominoes = new string[] { "0_0", "1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_3", "4_0", "4_1", "4_2", "4_3", "4_4", "5_0", "5_1", "5_2", "5_3", "5_4", "5_5", "6_0", "6_1", "6_2", "6_3", "6_4", "6_5", "6_6" };
-
-        public List<string> deck;
-        public List<string> discardPile = new List<string>();
+        public readonly List<string> dominoes = new List<string> { "0_0", "1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_3", "4_0", "4_1", "4_2", "4_3", "4_4", "5_0", "5_1", "5_2", "5_3", "5_4", "5_5", "6_0", "6_1", "6_2", "6_3", "6_4", "6_5", "6_6" };
+        
+        public List<byte> deck;
+        public List<byte> discardPile = new List<byte>();
         public bool? IsDealing { get; protected set; } = null;
         public int? CurrentBidAmount;
         public int WhoBid = -1;
@@ -323,12 +323,15 @@ namespace Domino42
             GameFlow();
         }
 
-        public static List<string> GenerateDeck()
+        public List<byte> GenerateDeck()
         {
-            List<string> newDeck = new List<string>();
+            List<byte> newDeck = new List<byte>();
 
-            newDeck.AddRange(dominoes);
-
+            for (int i = 0; i < dominoes.Count; i++)
+            {
+                newDeck.Add((byte)i);
+            }
+            
             return newDeck;
         }
 
@@ -367,7 +370,7 @@ namespace Domino42
             float xOffset = 1.0f;
             int i = 0;
 
-            foreach (string domino in deck)
+            foreach (byte domino in deck)
             {
                 //yield return new WaitForSeconds(0.03f);
 
@@ -410,7 +413,7 @@ namespace Domino42
                     Quaternion.Euler(0, 0, 0),
                     players[index].transform
                 );
-                newDomino.name = domino;
+                newDomino.name = dominoes[domino];
                 newDomino.GetComponent<Selectable>().faceUp = true;
 
                 dominoAnimator.AddDominoAnimation(
@@ -428,7 +431,7 @@ namespace Domino42
                 if (discardPile.Count >= 21) break;
             }
 
-            foreach (string domino in discardPile)
+            foreach (byte domino in discardPile)
             {
                 if (deck.Contains(domino))
                 {
@@ -451,7 +454,7 @@ namespace Domino42
             float yOffsetCalc = 0f;
             int direction = 1;
 
-            foreach (string domino in deck)
+            foreach (byte domino in deck)
             {
                 //yield return new WaitForSeconds(0.03f);
 
@@ -485,7 +488,7 @@ namespace Domino42
                     Quaternion.Euler(0, 0, 0),
                     players[index].transform
                 );
-                newDomino.name = domino;
+                newDomino.name = dominoes[domino];
                 newDomino.GetComponent<Selectable>().faceUp = true;
 
                 dominoAnimator.AddDominoAnimation(
@@ -499,7 +502,7 @@ namespace Domino42
                 players[index].Hand.Add(domino);
             }
 
-            foreach (string domino in discardPile)
+            foreach (byte domino in discardPile)
             {
                 if (deck.Contains(domino))
                 {
@@ -639,7 +642,7 @@ namespace Domino42
             List<string> dominoNums = new List<string>();
             players[playerIndex].Hand.ForEach(domino =>
             {
-                var dominoSplit = domino.Split('_');
+                var dominoSplit = dominoes[domino].Split('_');
                 dominoNums.Add(dominoSplit[0]);
                 dominoNums.Add(dominoSplit[1]);
             });
@@ -710,15 +713,15 @@ namespace Domino42
 
             int trumpInt = (int)Trump;
             string trumpStr = trumpInt.ToString();
-            string selectedDomino = null;
+            byte? selectedDomino = null;
 
-            IEnumerable<string> trumpAvailable = players[playerIndex].Hand.Where(domino => domino.Contains(trumpStr));
+            IEnumerable<byte> trumpAvailable = players[playerIndex].Hand.Where(domino => dominoes[domino].Contains(trumpStr));
             if (trumpAvailable.Count() <= 0)
             {
                 Selectable initSelectedDomino = players[InitialPlayerTurn].SelectedDomino;
                 if (initSelectedDomino.name != null)
                 {
-                    IEnumerable<string> tempTrumpAvailable = players[playerIndex].Hand.Where(domino => domino.Contains(initSelectedDomino.high.ToString()));
+                    IEnumerable<byte> tempTrumpAvailable = players[playerIndex].Hand.Where(domino => dominoes[domino].Contains(initSelectedDomino.high.ToString()));
 
                     trumpAvailable = tempTrumpAvailable;
                 }
@@ -730,14 +733,14 @@ namespace Domino42
                 {
                     int left1 = 0;
                     int right1 = 0;
-                    var dominoSplit1 = i1.Split('_');
+                    var dominoSplit1 = dominoes[i1].Split('_');
                     int.TryParse(dominoSplit1[0], out left1);
                     int.TryParse(dominoSplit1[1], out right1);
                     int sum1 = left1 + right1;
 
                     int left2 = 0;
                     int right2 = 0;
-                    var dominoSplit2 = i2.Split('_');
+                    var dominoSplit2 = dominoes[i2].Split('_');
                     int.TryParse(dominoSplit2[0], out left2);
                     int.TryParse(dominoSplit2[1], out right2);
                     int sum2 = left2 + right2;
@@ -758,14 +761,14 @@ namespace Domino42
                 {
                     int left1 = 0;
                     int right1 = 0;
-                    var dominoSplit1 = i1.Split('_');
+                    var dominoSplit1 = dominoes[i1].Split('_');
                     int.TryParse(dominoSplit1[0], out left1);
                     int.TryParse(dominoSplit1[1], out right1);
                     int sum1 = left1 + right1;
 
                     int left2 = 0;
                     int right2 = 0;
-                    var dominoSplit2 = i2.Split('_');
+                    var dominoSplit2 = dominoes[i2].Split('_');
                     int.TryParse(dominoSplit2[0], out left2);
                     int.TryParse(dominoSplit2[1], out right2);
                     int sum2 = left2 + right2;
@@ -774,16 +777,16 @@ namespace Domino42
                 });
             }
 
-            SelectDominoFromHand(playerIndex, selectedDomino);
+            SelectDominoFromHand(playerIndex, selectedDomino.Value);
 
             yield return new WaitForSeconds(2f);
         }
 
-        public void SelectDominoFromHand(int playerIndex, string selectedDomino)
+        public void SelectDominoFromHand(int playerIndex, byte selectedDomino)
         {
             // Verify selected domino is in hand...?
 
-            var selectedDominoGameObject = players[playerIndex].transform.Find(selectedDomino).gameObject;
+            var selectedDominoGameObject = players[playerIndex].transform.Find(dominoes[selectedDomino]).gameObject;
             var selectableDomino = selectedDominoGameObject.GetComponent<Selectable>();
 
             Vector3 initPos = selectedDominoGameObject.transform.position;
@@ -800,7 +803,7 @@ namespace Domino42
                 initRot,
                 playerSpots[playerIndex].transform
             );
-            newDomino.name = selectedDomino;
+            newDomino.name = dominoes[selectedDomino];
             newDomino.GetComponent<Selectable>().faceUp = true;
 
             dominoAnimator.AddDominoAnimation(
@@ -929,7 +932,7 @@ namespace Domino42
                 var childGameObj = playerSpots[i].gameObject.transform.Find(players[i].SelectedDomino.name).gameObject;
                 Destroy(childGameObj);
 
-                discardPile.Add(childGameObj.name);
+                discardPile.Add((byte)dominoes.FindIndex(d => d == childGameObj.name));
             }
         }
 

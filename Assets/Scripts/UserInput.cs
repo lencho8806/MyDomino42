@@ -36,7 +36,7 @@ namespace Domino42
                 RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
                 if (hit)
                 {
-                    if (hit.collider.CompareTag("Domino") && domino42.players[domino42.CurrentPlayerTurn].Hand.Exists(domino => domino == hit.collider.name))
+                    if (hit.collider.CompareTag("Domino") && domino42.players[domino42.CurrentPlayerTurn].Hand.Exists(domino => domino42.dominoes[domino] == hit.collider.name))
                     {
                         if (hit.collider.name == prevObjectClicked.name)
                         {
@@ -45,7 +45,7 @@ namespace Domino42
 
                             prevObjectClicked = this.gameObject;
 
-                            domino42.SelectDominoFromHand(domino42.CurrentPlayerTurn, hit.collider.name);
+                            domino42.SelectDominoFromHand(domino42.CurrentPlayerTurn, (byte)domino42.dominoes.FindIndex(d => d == hit.collider.name));
 
                             //domino42.players[0].TurnComplete = true;
                         }

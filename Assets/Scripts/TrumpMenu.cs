@@ -118,7 +118,7 @@ namespace Domino42
             List<string> dominoNums = new List<string>();
             domino42.players[domino42.CurrentPlayerTurn].Hand.ForEach(domino =>
             {
-                var dominoSplit = domino.Split('_');
+                var dominoSplit = domino42.dominoes[domino].Split('_');
                 dominoNums.Add(dominoSplit[0]);
                 dominoNums.Add(dominoSplit[1]);
             });

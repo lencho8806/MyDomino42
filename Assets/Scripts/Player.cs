@@ -6,7 +6,7 @@ namespace Domino42
 {
     public class Player : MonoBehaviour
     {
-        public List<string> Hand = new List<string>();
+        public List<byte> Hand = new List<byte>();
         public bool IsDealer = false;
         public bool IsAI = true;
         public string Id;
