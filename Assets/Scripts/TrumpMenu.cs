@@ -92,11 +92,7 @@ namespace Domino42
 
         public void TrumpEnd()
         {
-            //var domino42 = FindObjectOfType<Game>();
-            domino42.players[domino42.CurrentPlayerTurn].Trump = (Trump)Trump;
-            domino42.Trump = (Trump)Trump;
-
-            domino42.trumpText.text = domino42.Trump.ToString();
+            domino42.TrumpEnd(Trump);
 
             trumpMenuUI.SetActive(false);
             Time.timeScale = 1f;

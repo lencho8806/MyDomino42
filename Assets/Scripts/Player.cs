@@ -11,8 +11,8 @@ namespace Domino42
         public bool IsAI = true;
         public string Id;
         public int? BidAmount;
-        public bool BidComplete { get { return BidAmount != null; } }
-        public Domino42.Trump? Trump;
+        public bool BidComplete = false;
+        public Domino42.Trump? Trump = null;
         public bool TurnComplete = false;
         public Selectable SelectedDomino;
         public bool IsActive = false;

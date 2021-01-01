@@ -87,10 +87,7 @@ namespace Domino42
 
         byte[] encryptionKey;
         byte[] safeData;
-
-        public int dataChangeCount = 0;
-        public TestProperty myTestProperty = new TestProperty();
-
+        
         protected void Awake()
         {
             for (int i = 0; i < 4; i++)
@@ -112,6 +109,8 @@ namespace Domino42
         // Update is called once per frame
         protected void Update()
         {
+            Debug.Log("Base - UPDATE");
+
             switch (gameState)
             {
                 case GameState.Deal:
@@ -368,7 +367,7 @@ namespace Domino42
 
             float yOffset = 1.0f;
             float xOffset = 1.0f;
-            int i = 0;
+            int i = players.FindIndex(p => p.IsDealer);
 
             foreach (byte domino in deck)
             {
@@ -517,6 +516,8 @@ namespace Domino42
         // Bid
         protected virtual void Bid()
         {
+            Debug.Log("Base - Bid");
+
             int dealerIndex = players.FindIndex(player => player.IsDealer);
             CurrentPlayerTurn = -1;
 
@@ -553,11 +554,15 @@ namespace Domino42
 
         protected void BidEnumerator(int playerIndex)
         {
+            Debug.Log("Base - BidEnumerator");
+
             StartCoroutine(Bid_AI(playerIndex));
         }
 
         IEnumerator Bid_AI(int playerIndex)
         {
+            Debug.Log("Base - Bid_AI");
+
             yield return new WaitForSeconds(2f);
 
             System.Random bidRandom = new System.Random();
@@ -586,13 +591,24 @@ namespace Domino42
             }
 
             players[playerIndex].BidAmount = bidAmmount;
+            players[playerIndex].BidComplete = true;
             playerBidTexts[playerIndex].text = players[playerIndex].BidAmount.ToString();
 
             yield return new WaitForSeconds(2f);
         }
 
-        // Trump - AI
-        public void SetTrump()
+        public virtual void BidEnd(int amount)
+        {
+            if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
+            {
+                players[CurrentPlayerTurn].BidAmount = amount;
+
+                playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
+            }
+        }
+
+        // Trump 
+        protected virtual void SetTrump()
         {
             int maxBid = -100; // as to not interfere with pass (-1)
             CurrentPlayerTurn = -1;
@@ -630,7 +646,7 @@ namespace Domino42
             }
         }
 
-        void TrumpEnumerator(int playerIndex)
+        protected void TrumpEnumerator(int playerIndex)
         {
             StartCoroutine(Trump_AI(playerIndex));
         }
@@ -667,8 +683,19 @@ namespace Domino42
             yield return new WaitForSeconds(2f);
         }
 
-        // Play - AI
-        public void SetPlay()
+        public virtual void TrumpEnd(int trump)
+        {
+            if (gameState == GameState.Trump && CurrentPlayerTurn == 0)
+            {
+                players[CurrentPlayerTurn].Trump = (Trump)trump;
+                Trump = (Trump)trump;
+
+                trumpText.text = trump.ToString();
+            }
+        }
+
+        // Play
+        protected virtual void SetPlay()
         {
             CurrentPlayerTurn = -1;
             for (int i = InitialPlayerTurn; i < (InitialPlayerTurn + 4); i++)
@@ -702,7 +729,7 @@ namespace Domino42
             }
         }
 
-        void PlayEnumerator(int playerIndex)
+        protected void PlayEnumerator(int playerIndex)
         {
             StartCoroutine(Play_AI(playerIndex));
         }
@@ -782,7 +809,7 @@ namespace Domino42
             yield return new WaitForSeconds(2f);
         }
 
-        public void SelectDominoFromHand(int playerIndex, byte selectedDomino)
+        public virtual void SelectDominoFromHand(int playerIndex, byte selectedDomino)
         {
             // Verify selected domino is in hand...?
 
@@ -957,6 +984,7 @@ namespace Domino42
                 }
 
                 players[i].BidAmount = null;
+                players[i].BidComplete = false;
 
                 players[i].Trump = null;
             }
@@ -1089,176 +1117,174 @@ namespace Domino42
 
         protected void Encrypt()
         {
+            Debug.Log("ENCRYPT");
             SWNetworkMessage message = new SWNetworkMessage();
-
-            //public List<Player> players = new List<Player>(4);
-            //public List<Text> playerBidTexts = new List<Text>(4);
-            //List<PlayerData> playerDataList = new List<PlayerData>();
-            //for (int i = 0; i < players.Count; i++)
-            //{
-            //    playerDataList.Add(new PlayerData
-            //    {
-            //        Hand = players[i].Hand,
-            //        IsDealer = players[i].IsDealer,
-            //        IsAI = players[i].IsAI,
-            //        Id = players[i].Id,
-            //        BidAmount = players[i].BidAmount,
-            //        Trump = players[i].Trump,
-            //        TurnComplete = players[i].TurnComplete,
-            //        SelectedDomino = players[i].SelectedDomino,
-            //        IsActive = players[i].IsActive,
-
-            //        playerBidText = playerBidTexts[i].text, 
-            //    });
-            //}
-
-            //message.PushUTF8LongString(JsonConvert.SerializeObject(playerDataList));
-
-            ////public static string[] dominoes = new string[] { "0_0", "1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_3", "4_0", "4_1", "4_2", "4_3", "4_4", "5_0", "5_1", "5_2", "5_3", "5_4", "5_5", "6_0", "6_1", "6_2", "6_3", "6_4", "6_5", "6_6" };
-
-            ////public List<string> deck;
-            //message.PushUTF8LongString(JsonConvert.SerializeObject(deck));
-            ////public List<string> discardPile = new List<string>();
-            //message.PushUTF8LongString(JsonConvert.SerializeObject(discardPile));
-            ////public bool? IsDealing { get; private set; } = null;
-            ////public int? CurrentBidAmount;
-            ////public int WhoBid = -1; -> WhoBidId
             
-            ////public Text trumpText;
+            for (int i = 0; i < players.Count; i++)
+            {
+                message.PushUTF8ShortString(players[i].Id);
 
-            ////public Trump Trump;
-            ////public int InitialPlayerTurn = -1; -> InitialPlayerTurnId
-            ////public int CurrentPlayerTurn = -1; -> CurrentPlayerTurnId
-            ////public bool RoundComplete = false;
-            ////public bool? SetComplete = null;
+                message.Push((byte)players[i].Hand.Count);
+                message.PushByteArray(players[i].Hand.ToArray());
 
-            ////public int RoundScoreUs { get; private set; } = 0;
-            ////public Text RoundUsText;
-            ////public int RoundScoreThem { get; private set; } = 0;
-            ////public Text RoundThemText;
-            ////public int SetScoreUs { get; private set; } = 0;
-            ////public Text SetUsText;
-            ////public int SetScoreThem { get; private set; } = 0;
-            ////public Text SetThemText;
-            //message.PushUTF8LongString(
-            //    JsonConvert.SerializeObject(
-            //        new GameData
-            //        {
-            //            //GameState = gameState,
-            //            IsDealing = IsDealing,
-            //            CurrentBidAmount = CurrentBidAmount,
-            //            WhoBidId = WhoBid == -1 ? null : players[WhoBid].Id,
-            //            //playerBidTexts = playerBidTexts.Select(pb => pb.text),
-            //            trumpText = trumpText.text,
-            //            Trump = Trump,
-            //            InitialPlayerTurnId = InitialPlayerTurn == -1 ? null : players[InitialPlayerTurn].Id,
-            //            CurrentPlayerTurnId = CurrentPlayerTurn == -1 ? null : players[CurrentPlayerTurn].Id,
-            //            RoundComplete = RoundComplete,
-            //            SetComplete = SetComplete,
-            //            RoundScoreUs = RoundScoreUs,
-            //            RoundScoreThem = RoundScoreThem,
-            //            SetScoreUs = SetScoreUs,
-            //            SetScoreThem = SetScoreThem
-            //        })
-            //    );
+                message.Push(players[i].IsDealer);
 
-            ////public BidMenu bidMenu;
+                message.Push(players[i].IsAI);
 
-            ////public TrumpMenu trumpMenu;
+                message.PushUTF8ShortString(players[i].BidAmount == null ? string.Empty : players[i].BidAmount.ToString());
 
+                message.Push(players[i].BidComplete);
 
-            ////public List<GameObject> playerSpots = new List<GameObject>();
+                message.PushUTF8ShortString(players[i].Trump.HasValue ? ((int)players[i].Trump).ToString() : string.Empty);
 
-            ////public WinLoseMenu winLoseMenu;
+                message.Push(players[i].TurnComplete);
 
-            ////public List<Text> PlayerNames = new List<Text>();
+                Debug.Log($"SelectedDomino.name:'{players[i].SelectedDomino?.name ?? string.Empty}'");
+                message.PushUTF8ShortString(players[i].SelectedDomino?.name ?? string.Empty);
 
-            ////public Text MessageText;
+                message.Push(players[i].IsActive);
+
+                message.PushUTF8ShortString(playerBidTexts[i].text);
+            }
+            
+
+            message.Push((byte)deck.Count);
+            message.PushByteArray(deck.ToArray());
+
+            message.Push((byte)discardPile.Count);
+            message.PushByteArray(discardPile.ToArray());
+            
 
             message.Push((int)gameState);
-            message.Push(++dataChangeCount);
 
+            message.Push(IsDealing == null ? -1 : IsDealing.Value ? 1 : 0);
+
+            message.PushUTF8ShortString(CurrentBidAmount.ToString());
+
+            message.PushUTF8ShortString(WhoBid == -1 ? string.Empty : players[WhoBid].Id);
+
+            message.PushUTF8ShortString(trumpText.text);
+
+            message.Push((int)Trump);
+
+            message.PushUTF8ShortString(InitialPlayerTurn == -1 ? string.Empty : players[InitialPlayerTurn].Id);
+
+            message.PushUTF8ShortString(CurrentPlayerTurn == -1 ? string.Empty : players[CurrentPlayerTurn].Id);
+
+            message.Push(RoundComplete);
+
+            message.Push(SetComplete == null ? -1 : SetComplete.Value ? 1 : 0);
+
+            message.Push(RoundScoreUs);
+
+            message.Push(RoundScoreThem);
+
+            message.Push(SetScoreUs);
+
+            message.Push(SetScoreThem);
+            
             safeData = AES.EncryptAES128(message.ToArray(), encryptionKey);
         }
 
         protected void Decrypt()
         {
+            Debug.Log("DECRYPT");
             byte[] byteArray = AES.DecryptAES128(safeData, encryptionKey);
 
             SWNetworkMessage message = new SWNetworkMessage(byteArray);
 
-            //int index = 0;
-            //var playersJson = message.PopUTF8LongString();
-            //var decryptPlayers = JsonConvert.DeserializeObject<List<PlayerData>>(playersJson);
-            //Debug.Log("PLAYERS DATA:");
-            //Debug.Log(playersJson);
-            //players.ForEach(p =>
-            //{
-            //    var player = decryptPlayers.Find(dp => dp.Id == p.Id);
+            for (int i = 0; i < players.Count; i++)
+            {
+                string id = message.PopUTF8ShortString();
 
-            //    if (player == null) return;
+                int playerIndex = players.FindIndex(p => p.Id == id);
+                
+                byte handCount = message.PopByte();
+                players[playerIndex].Hand = message.PopByteArray(handCount).ToList();
+                
+                players[playerIndex].IsDealer = message.PopBool();
+                
+                players[playerIndex].IsAI = message.PopBool();
 
-            //    p.Hand = player.Hand;
-            //    p.IsDealer = player.IsDealer;
-            //    p.IsAI = player.IsAI;
-            //    p.Id = player.Id;
-            //    p.BidAmount = player.BidAmount;
-            //    p.Trump = player.Trump;
-            //    p.TurnComplete = player.TurnComplete;
-            //    p.SelectedDomino = player.SelectedDomino;
-            //    p.IsActive = player.IsActive;
+                string bidAmountStr = message.PopUTF8ShortString();
+                players[playerIndex].BidAmount = string.IsNullOrWhiteSpace(bidAmountStr) ? (int?)null : int.Parse(bidAmountStr);
+                
+                players[playerIndex].BidComplete = message.PopBool();
 
-            //    AddDominoChildren(p.transform, index, p.Hand);
+                string playerTrumpStr = message.PopUTF8ShortString();
+                players[playerIndex].Trump = string.IsNullOrWhiteSpace(playerTrumpStr) ? (Trump?)null : (Trump)int.Parse(playerTrumpStr);
+                
+                players[playerIndex].TurnComplete = message.PopBool();
 
-            //    playerBidTexts[index].text = player.playerBidText;
+                string selectedDominoName = message.PopUTF8ShortString();
+                Debug.Log($"selected domino name (pop): {selectedDominoName}");
+                if (!string.IsNullOrWhiteSpace(selectedDominoName))
+                {
+                    var selectedDominoTransform = players[playerIndex].transform.Find(selectedDominoName);
+                    if (selectedDominoTransform == null)
+                    {
+                        playerSpots[playerIndex].transform.Find(selectedDominoName);
+                    }
 
-            //    //p.transform.SetParent(player.transform.parent);
-            //    //p.transform.SetPositionAndRotation(player.transform.position, player.transform.rotation);
-            //    //for (int i = player.transform.childCount - 1; i > 0; i--)
-            //    //{
-            //    //    player.transform.GetChild(i).SetParent(p.transform);
-            //    //}
+                    if (selectedDominoTransform != null)
+                    {
+                        var selectedDominoGameObject = selectedDominoTransform.gameObject;
+                        var selectableDomino = selectedDominoGameObject.GetComponent<Selectable>();
+                        players[playerIndex].SelectedDomino = selectableDomino;
+                        Debug.Log($"selected domino name: '{players[playerIndex].SelectedDomino?.name ?? string.Empty}'");
+                    }
+                }
 
-            //    ++index;
-            //});
+                players[playerIndex].IsActive = message.PopBool();
+                
+                playerBidTexts[playerIndex].text = message.PopUTF8ShortString();
+            }
 
-            //var deckJson = message.PopUTF8LongString();
-            //deck = JsonConvert.DeserializeObject<List<string>>(deckJson);
+            
+            byte deckCount = message.PopByte();
+            deck = message.PopByteArray(deckCount).ToList();
+            
+            byte discardPileCount = message.PopByte();
+            discardPile = message.PopByteArray(discardPileCount).ToList();
 
-            //var discardPileJson = message.PopUTF8LongString();
-            //discardPile = JsonConvert.DeserializeObject<List<string>>(discardPileJson);
+            
+            gameState = (GameState)message.PopUInt32();
+            
+            int isDealingInt = message.PopInt32();
+            IsDealing = isDealingInt == -1 ? (bool?)null : isDealingInt == 1 ? true : false;
+            
+            string currentBidAmountStr = message.PopUTF8ShortString();
+            CurrentBidAmount = string.IsNullOrWhiteSpace(currentBidAmountStr) ? (int?)null : int.Parse(currentBidAmountStr);
 
-            //var gameDataJson = message.PopUTF8LongString();
-            //var gameData = JsonConvert.DeserializeObject<GameData>(gameDataJson);
-            //Debug.Log("GAME DATA:");
-            //Debug.Log(gameDataJson);
-            //Debug.Log($"gameState: {gameData.GameState.ToString()}");
-            ////gameState = gameData.GameState;
-            //IsDealing = gameData.IsDealing;
-            //CurrentBidAmount = gameData.CurrentBidAmount;
-            //string whoBidId = gameData.WhoBidId;
-            //WhoBid = whoBidId == null ? -1 : players.FindIndex(p => p.Id == whoBidId);
-            ////playerBidTexts = gameData.playerBidTexts = playerBidTexts.Select(pb => pb.text);
-            //trumpText.text = gameData.trumpText;
-            //Trump = gameData.Trump;
-            //string initialPlayerTurnId = gameData.InitialPlayerTurnId;
-            //InitialPlayerTurn = initialPlayerTurnId == null ? -1 : players.FindIndex(p => p.Id == initialPlayerTurnId);
-            //string currentPlayerTurnId = gameData.CurrentPlayerTurnId;
-            //CurrentPlayerTurn = currentPlayerTurnId == null ? -1 : players.FindIndex(p => p.Id == currentPlayerTurnId);
-            //RoundComplete = gameData.RoundComplete;
-            //SetComplete = gameData.SetComplete;
-            //RoundScoreUs = gameData.RoundScoreUs;
-            //RoundUsText.text = $"Us: {RoundScoreUs}";
-            //RoundScoreThem = gameData.RoundScoreThem;
-            //RoundThemText.text = $"Them: {RoundScoreThem}";
-            //SetScoreUs = gameData.SetScoreUs;
-            //SetUsText.text = $"Us: {SetScoreUs}";
-            //SetScoreThem = gameData.SetScoreThem;
-            //SetThemText.text = $"Them: {SetScoreThem}";
+            string whoBidId = message.PopUTF8ShortString();
+            WhoBid = players.FindIndex(p => p.Id == whoBidId);
+            
+            trumpText.text = message.PopUTF8ShortString();
+            
+            Trump = (Trump)message.PopInt32();
+            
+            string initialPlayerTurnId = message.PopUTF8ShortString();
+            InitialPlayerTurn = players.FindIndex(p => p.Id == initialPlayerTurnId);
+            
+            string currentPlayerTurnId = message.PopUTF8ShortString();
+            CurrentPlayerTurn = players.FindIndex(p => p.Id == currentPlayerTurnId);
+            
+            RoundComplete = message.PopBool();
+            
+            int setCompleteInt = message.PopInt32();
+            SetComplete = setCompleteInt == -1 ? (bool?)null : setCompleteInt == 1 ? true : false;
+            
+            RoundScoreUs = message.PopInt32();
+            RoundUsText.text = $"Us: {RoundScoreUs}";
 
-            gameState = (GameState) message.PopInt32();
+            RoundScoreThem = message.PopInt32();
+            RoundThemText.text = $"Them: {RoundScoreThem}";
 
-            dataChangeCount = message.PopInt32();
+            SetScoreUs = message.PopInt32();
+            SetUsText.text = $"Us: {SetScoreUs}";
+
+            SetScoreThem = message.PopInt32();
+            SetThemText.text = $"Them: {SetScoreThem}";
         }
 
         public EncryptedData EncryptedData()
@@ -1279,66 +1305,8 @@ namespace Domino42
             safeData = encryptedData.data;
         }
 
-        public void ApplyEncrptedTestProperty(TestProperty testProperty)
-        {
-            if (testProperty == null)
-            {
-                return;
-            }
-
-            myTestProperty = testProperty;
-        }
-
-        public void AddDominoChildren(Transform transform, int index, List<string> dominos)
-        {
-            float yOffset = 1.0f;
-            float xOffset = 1.0f;
-            
-            foreach (string domino in dominos)
-            {
-                var dominoObj = transform.Find(domino);
-
-                if (dominoObj != null) return;
-
-                float xOffsetCalc = players[index].transform.childCount * xOffset;
-                float yOffsetCalc = 0f;
-                int direction = 1;
-
-                switch (index)
-                {
-                    case 0:
-                        //initialized values
-                        break;
-                    case 1:
-                        xOffsetCalc = 0;
-                        yOffsetCalc = players[index].transform.childCount * yOffset;
-                        direction = -1;
-                        break;
-                    case 2:
-                        xOffsetCalc = players[index].transform.childCount * xOffset;
-                        yOffsetCalc = 0;
-                        direction = -1;
-                        break;
-                    case 3:
-                        xOffsetCalc = 0;
-                        yOffsetCalc = players[index].transform.childCount * yOffset;
-                        direction = 1;
-                        break;
-                }
-
-                GameObject newDomino = Instantiate(
-                    dominoPrefab,
-                    new Vector3(
-                        players[index].transform.position.x + (xOffsetCalc * direction),
-                        players[index].transform.position.y + (yOffsetCalc * direction), 
-                        players[index].transform.position.z),
-                    Quaternion.Euler(0, 0, 90 * index),
-                    players[index].transform
-                );
-            }
-        }
-
         //****************** Animator Event *********************//
+
         public virtual void AllAnimationsFinished()
         {
             GameFlow();

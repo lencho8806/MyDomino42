@@ -14,7 +14,19 @@ namespace Domino42
     }
 
     [Serializable]
-    public class TestPropertyEvent : UnityEvent<TestProperty>
+    public class BidSelectedEvent : UnityEvent<int>
+    {
+
+    }
+
+    [Serializable]
+    public class TrumpSelectedEvent : UnityEvent<int>
+    {
+
+    }
+
+    [Serializable]
+    public class DominoSelectedEvent : UnityEvent<byte>
     {
 
     }
@@ -23,23 +35,36 @@ namespace Domino42
     {
         public GameDataEvent OnGameDataReadyEvent = new GameDataEvent();
         public GameDataEvent OnGameDataChangedEvent = new GameDataEvent();
-
-        public TestPropertyEvent OnGameDataReadyTestPropertyEvent = new TestPropertyEvent();
-        public TestPropertyEvent OnGameDataChangedTestPropertyEvent = new TestPropertyEvent();
-
+        
         public UnityEvent OnGameStateChangedEvent = new UnityEvent();
+
+        public BidSelectedEvent OnBidSelectedEvent = new BidSelectedEvent();
+
+        public TrumpSelectedEvent OnTrumpSelectedEvent = new TrumpSelectedEvent();
+
+        public DominoSelectedEvent OnDominoSelectedEvent = new DominoSelectedEvent();
 
         RoomPropertyAgent roomPropertyAgent;
         RoomRemoteEventAgent roomRemoteEventAgent;
 
         const string ENCRYPTED_DATA = "EncryptedData";
         const string GAME_STATE_CHANGED = "GameStateChanged";
+        const string BID_SELECTED = "BidSelected";
+        const string TRUMP_SELECTED = "TrumpSelected";
+        const string DOMINO_SELECTED = "DominoSelected";
 
         private void Awake()
         {
             Debug.Log("NetCode -> Awake");
             roomPropertyAgent = FindObjectOfType<RoomPropertyAgent>();
             roomRemoteEventAgent = FindObjectOfType<RoomRemoteEventAgent>();
+
+            //roomRemoteEventAgent.AddListener(BID_SELECTED, OnBidSelectedRemoteEvent);
+        }
+
+        private void OnDestroy()
+        {
+            //roomRemoteEventAgent.RemoveListener(BID_SELECTED, OnBidSelectedRemoteEvent);
         }
 
         public void EnableRoomPropertyAgent()
@@ -53,17 +78,51 @@ namespace Domino42
             Debug.Log("NetCode -> ModifyGameData");
             roomPropertyAgent.Modify(ENCRYPTED_DATA, encryptedData);
         }
-
-        public void ModifyTestProperty(TestProperty testProperty)
-        {
-            Debug.Log("NetCode -> ModifyGameData");
-            roomPropertyAgent.Modify("TestProperty", testProperty);
-        }
-
+        
         public void NotifyOtherPlayersGameStateChanged()
         {
             Debug.Log("NetCode -> NotifyOtherPlayersGameStateChanged");
             roomRemoteEventAgent.Invoke(GAME_STATE_CHANGED);
+        }
+
+        public void NotifyHostPlayerBidSelected(int amount)
+        {
+            Debug.Log("NetCode -> NotifyHostPlayerBidSelected");
+
+            SWNetworkMessage message = new SWNetworkMessage();
+            message.Push(amount);
+            
+            roomRemoteEventAgent.Invoke(BID_SELECTED, message);
+        }
+
+        public void NotifyHostPlayerTrumpSelected(int trump)
+        {
+            Debug.Log("NetCode -> NotifyHostPlayerTrumpSelected");
+
+            SWNetworkMessage message = new SWNetworkMessage();
+            message.Push(trump);
+
+            roomRemoteEventAgent.Invoke(TRUMP_SELECTED, message);
+        }
+
+        public void NotifyHostPlayerDominoSelected(byte selectedDomino)
+        {
+            Debug.Log("NetCode -> NotifyHostPlayerDominoSelected");
+
+            SWNetworkMessage message = new SWNetworkMessage();
+            message.Push(selectedDomino);
+
+            roomRemoteEventAgent.Invoke(DOMINO_SELECTED, message);
+        }
+
+        public void NotifyOtherPlayerDominoSelected(byte selectedDomino)
+        {
+            Debug.Log("NetCode -> NotifyOtherPlayerDominoSelected");
+
+            SWNetworkMessage message = new SWNetworkMessage();
+            message.Push(selectedDomino);
+
+            roomRemoteEventAgent.Invoke(DOMINO_SELECTED, message);
         }
 
         //****************** Room Property Events *********************//
@@ -82,26 +141,36 @@ namespace Domino42
             OnGameDataChangedEvent.Invoke(encryptedData);
         }
 
-        public void OnTestPropertyReady()
-        {
-            Debug.Log("NetCode -> OnTestPropertyReady");
-            TestProperty testProperty = roomPropertyAgent.GetPropertyWithName("TestProperty").GetValue<TestProperty>();
-            OnGameDataReadyTestPropertyEvent.Invoke(testProperty);
-        }
-
-        public void OnTestPropertyChanged()
-        {
-            Debug.Log("NetCode -> OnTestPropertyChanged");
-            TestProperty testProperty = roomPropertyAgent.GetPropertyWithName("TestProperty").GetValue<TestProperty>();
-            OnGameDataChangedTestPropertyEvent.Invoke(testProperty);
-        }
-
         //****************** Room Remote Events *********************//
-
+        
         public void OnGameStateChangedRemoteEvent()
         {
             Debug.Log("NetCode -> OnGameStateChangedRemoteEvent");
             OnGameStateChangedEvent.Invoke();
+        }
+        
+        public void OnBidSelectedRemoteEvent(SWNetworkMessage message)
+        {
+            int amount = message.PopInt32();
+            Debug.Log($"NetCode -> OnBidSelectedRemoteEvent:{amount}");
+            
+            OnBidSelectedEvent.Invoke(amount);
+        }
+
+        public void OnTrumpSelectedRemoteEvent(SWNetworkMessage message)
+        {
+            int trump = message.PopInt32();
+            Debug.Log($"NetCode -> OnTrumpSelectedRemoteEvent:{trump}");
+
+            OnTrumpSelectedEvent.Invoke(trump);
+        }
+
+        public void OnDominoSelectedRemoteEvent(SWNetworkMessage message)
+        {
+            byte selectedDomino = message.PopByte();
+            Debug.Log($"NetCode -> OnDominoSelectedRemoteEvent:{selectedDomino}");
+
+            OnDominoSelectedEvent.Invoke(selectedDomino);
         }
     }
 
