@@ -22,7 +22,7 @@ namespace Domino42
         // Update is called once per frame
         void Update()
         {
-            if (domino42.CurrGameState == Game.GameState.Play && !domino42.players[domino42.CurrentPlayerTurn].IsAI)
+            if (domino42.CurrGameState == Game.GameState.Play && domino42.CurrentPlayerTurn == 0 && !domino42.players[domino42.CurrentPlayerTurn].IsAI)
             {
                 GetMouseClick();
             }

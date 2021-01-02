@@ -967,6 +967,8 @@ namespace Domino42
         {
             ResetRound();
 
+            IsDealing = null;
+
             int dealerIndex = 0;
             for (int i = 0; i < players.Count; i++)
             {
@@ -1139,7 +1141,7 @@ namespace Domino42
 
                 message.Push(players[i].TurnComplete);
 
-                Debug.Log($"SelectedDomino.name:'{players[i].SelectedDomino?.name ?? string.Empty}'");
+                //Debug.Log($"SelectedDomino.name:'{players[i].SelectedDomino?.name ?? string.Empty}'");
                 message.PushUTF8ShortString(players[i].SelectedDomino?.name ?? string.Empty);
 
                 message.Push(players[i].IsActive);
@@ -1175,13 +1177,13 @@ namespace Domino42
 
             message.Push(SetComplete == null ? -1 : SetComplete.Value ? 1 : 0);
 
-            message.Push(RoundScoreUs);
+            //message.Push(RoundScoreUs);
 
-            message.Push(RoundScoreThem);
+            //message.Push(RoundScoreThem);
 
-            message.Push(SetScoreUs);
+            //message.Push(SetScoreUs);
 
-            message.Push(SetScoreThem);
+            //message.Push(SetScoreThem);
             
             safeData = AES.EncryptAES128(message.ToArray(), encryptionKey);
         }
@@ -1217,7 +1219,7 @@ namespace Domino42
                 players[playerIndex].TurnComplete = message.PopBool();
 
                 string selectedDominoName = message.PopUTF8ShortString();
-                Debug.Log($"selected domino name (pop): {selectedDominoName}");
+                //Debug.Log($"selected domino name (pop): {selectedDominoName}");
                 if (!string.IsNullOrWhiteSpace(selectedDominoName))
                 {
                     var selectedDominoTransform = players[playerIndex].transform.Find(selectedDominoName);
@@ -1231,7 +1233,7 @@ namespace Domino42
                         var selectedDominoGameObject = selectedDominoTransform.gameObject;
                         var selectableDomino = selectedDominoGameObject.GetComponent<Selectable>();
                         players[playerIndex].SelectedDomino = selectableDomino;
-                        Debug.Log($"selected domino name: '{players[playerIndex].SelectedDomino?.name ?? string.Empty}'");
+                        //Debug.Log($"selected domino name: '{players[playerIndex].SelectedDomino?.name ?? string.Empty}'");
                     }
                 }
 
@@ -1274,17 +1276,17 @@ namespace Domino42
             int setCompleteInt = message.PopInt32();
             SetComplete = setCompleteInt == -1 ? (bool?)null : setCompleteInt == 1 ? true : false;
             
-            RoundScoreUs = message.PopInt32();
-            RoundUsText.text = $"Us: {RoundScoreUs}";
+            //RoundScoreUs = message.PopInt32();
+            //RoundUsText.text = $"Us: {RoundScoreUs}";
 
-            RoundScoreThem = message.PopInt32();
-            RoundThemText.text = $"Them: {RoundScoreThem}";
+            //RoundScoreThem = message.PopInt32();
+            //RoundThemText.text = $"Them: {RoundScoreThem}";
 
-            SetScoreUs = message.PopInt32();
-            SetUsText.text = $"Us: {SetScoreUs}";
+            //SetScoreUs = message.PopInt32();
+            //SetUsText.text = $"Us: {SetScoreUs}";
 
-            SetScoreThem = message.PopInt32();
-            SetThemText.text = $"Them: {SetScoreThem}";
+            //SetScoreThem = message.PopInt32();
+            //SetThemText.text = $"Them: {SetScoreThem}";
         }
 
         public EncryptedData EncryptedData()

@@ -44,6 +44,10 @@ namespace Domino42
 
         public DominoSelectedEvent OnDominoSelectedEvent = new DominoSelectedEvent();
 
+        public UnityEvent OnResetRoundEvent = new UnityEvent();
+        public UnityEvent OnResetSetEvent = new UnityEvent();
+        public UnityEvent OnResetMatchEvent = new UnityEvent();
+
         RoomPropertyAgent roomPropertyAgent;
         RoomRemoteEventAgent roomRemoteEventAgent;
 
@@ -52,6 +56,9 @@ namespace Domino42
         const string BID_SELECTED = "BidSelected";
         const string TRUMP_SELECTED = "TrumpSelected";
         const string DOMINO_SELECTED = "DominoSelected";
+        const string RESET_ROUND = "ResetRound";
+        const string RESET_SET = "ResetSet";
+        const string RESET_MATCH = "ResetMatch";
 
         private void Awake()
         {
@@ -104,17 +111,7 @@ namespace Domino42
 
             roomRemoteEventAgent.Invoke(TRUMP_SELECTED, message);
         }
-
-        public void NotifyHostPlayerDominoSelected(byte selectedDomino)
-        {
-            Debug.Log("NetCode -> NotifyHostPlayerDominoSelected");
-
-            SWNetworkMessage message = new SWNetworkMessage();
-            message.Push(selectedDomino);
-
-            roomRemoteEventAgent.Invoke(DOMINO_SELECTED, message);
-        }
-
+        
         public void NotifyOtherPlayerDominoSelected(byte selectedDomino)
         {
             Debug.Log("NetCode -> NotifyOtherPlayerDominoSelected");
@@ -123,6 +120,27 @@ namespace Domino42
             message.Push(selectedDomino);
 
             roomRemoteEventAgent.Invoke(DOMINO_SELECTED, message);
+        }
+
+        public void NotifyOtherPlayerResetRound()
+        {
+            Debug.Log("NetCode -> NotifyOtherPlayerResetRound");
+            
+            roomRemoteEventAgent.Invoke(RESET_ROUND);
+        }
+
+        public void NotifyOtherPlayerResetSet()
+        {
+            Debug.Log("NetCode -> NotifyOtherPlayerResetSet");
+            
+            roomRemoteEventAgent.Invoke(RESET_SET);
+        }
+
+        public void NotifyOtherPlayerResetMatch()
+        {
+            Debug.Log("NetCode -> NotifyOtherPlayerResetMatch");
+            
+            roomRemoteEventAgent.Invoke(RESET_MATCH);
         }
 
         //****************** Room Property Events *********************//
@@ -171,6 +189,24 @@ namespace Domino42
             Debug.Log($"NetCode -> OnDominoSelectedRemoteEvent:{selectedDomino}");
 
             OnDominoSelectedEvent.Invoke(selectedDomino);
+        }
+
+        public void OnResetRoundRemoteEvent()
+        {
+            Debug.Log("NetCode -> OnResetRoundRemoteEvent");
+            OnResetRoundEvent.Invoke();
+        }
+
+        public void OnResetSetRemoteEvent()
+        {
+            Debug.Log("NetCode -> OnResetSetRemoteEvent");
+            OnResetSetEvent.Invoke();
+        }
+
+        public void OnResetMatchRemoteEvent()
+        {
+            Debug.Log("NetCode -> OnResetMatchRemoteEvent");
+            OnResetMatchEvent.Invoke();
         }
     }
 

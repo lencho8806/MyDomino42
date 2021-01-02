@@ -79,12 +79,6 @@ namespace Domino42
         // Update is called once per frame
         protected new void Update()
         {
-            //if (gameState == GameState.Bid)
-            //{
-            //    Debug.Log($"{CurrentPlayerTurn} - {(players[CurrentPlayerTurn].BidComplete ? "true" : "false")}");
-            //    Debug.Log((players[CurrentPlayerTurn].BidAmount.HasValue ? players[CurrentPlayerTurn].BidAmount.Value.ToString() : "NULL"));
-            //}
-
             if (NetworkClient.Instance.IsHost)
             {
                 switch (gameState)
@@ -104,11 +98,11 @@ namespace Domino42
                         {
                             if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidComplete)
                             {
-                                Debug.Log("1 IF-S");
+                                //Debug.Log("1 IF-S");
 
                                 if (players.Exists(player => !player.BidComplete))
                                 {
-                                    Debug.Log("2 IF-S");
+                                    //Debug.Log("2 IF-S");
 
                                     //CurrentPlayerTurn = (CurrentPlayerTurn + 1) % 4;
                                     CurrentPlayerTurn = -1;
@@ -120,7 +114,7 @@ namespace Domino42
                                 }
                                 else
                                 {
-                                    Debug.Log("ELSE");
+                                    //Debug.Log("ELSE");
 
                                     gameState = GameState.Trump;
                                     //GameFlow();
@@ -149,40 +143,7 @@ namespace Domino42
                         }
                     case GameState.Play:
                         {
-                            //if (players[CurrentPlayerTurn].TurnComplete)
-                            //{
-                            //    Debug.Log("1 IF");
-                            //    //Debug.Log($"current player turn: {CurrentPlayerTurn}");
-                            //    //Debug.Log($"0 - TurnComplete:{players[0].TurnComplete.ToString()} - SelectedDomino:{players[0].SelectedDomino != null}");
-                            //    //Debug.Log($"1 - TurnComplete:{players[1].TurnComplete.ToString()} - SelectedDomino:{players[1].SelectedDomino != null}");
-                            //    //Debug.Log($"2 - TurnComplete:{players[2].TurnComplete.ToString()} - SelectedDomino:{players[2].SelectedDomino != null}");
-                            //    //Debug.Log($"3 - TurnComplete:{players[3].TurnComplete.ToString()} - SelectedDomino:{players[3].SelectedDomino != null}");
-
-                            //    if (players.Exists(player => player.TurnComplete == false))
-                            //    {
-                            //        Debug.Log("2 IF");
-                            //        // Hand not finished
-                            //        //GameFlow();
-                            //        Encrypt();
-                            //        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                            //        players[CurrentPlayerTurn].TurnComplete = true;
-
-                            //        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
-                            //    }
-                            //    else
-                            //    {
-                            //        Debug.Log("ELSE");
-
-                            //        players[CurrentPlayerTurn].TurnComplete = true;
-                            //        gameState = GameState.RoundWinner;
-                            //        //GameFlow();
-                            //        Encrypt();
-                            //        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                            //        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
-                            //    }
-                            //}
+                            
                             break;
                         }
                     case GameState.RoundWinner:
@@ -190,7 +151,11 @@ namespace Domino42
                             if (RoundComplete)
                             {
                                 gameState = GameState.SetWinner;
-                                GameFlow();
+                                //GameFlow();
+                                Encrypt();
+                                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                             }
                             break;
                         }
@@ -198,32 +163,60 @@ namespace Domino42
                         {
                             if (SetComplete != null)
                             {
+                                Debug.Log("SetComplete != null");
                                 if (SetComplete == true)
                                 {
+                                    Debug.Log("SetComplete == true");
                                     if (SetScoreUs >= 3)
                                     {
                                         gameState = GameState.Win;
-                                        GameFlow();
+                                        //GameFlow();
+                                        Encrypt();
+                                        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                     }
                                     else if (SetScoreThem >= 3)
                                     {
                                         gameState = GameState.Lose;
-                                        GameFlow();
+                                        //GameFlow();
+                                        Encrypt();
+                                        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                     }
                                     else
                                     {
-                                        ResetSet();
+                                        Debug.Log("Reset Set");
+                                        //ResetSet();
+                                        netCode.NotifyOtherPlayerResetSet();
 
-                                        gameState = GameState.Shuffle;
-                                        GameFlow();
+                                        gameState = GameState.Idle; // just wait until notifications are complete
+
+                                        //gameState = GameState.Shuffle;
+                                        ////GameFlow();
+                                        //Encrypt();
+                                        //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                        //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                     }
                                 }
                                 else
                                 {
-                                    ResetRound();
+                                    Debug.Log("SetComplete == false");
 
-                                    gameState = GameState.Play;
-                                    GameFlow();
+                                    Debug.Log("Reset Round");
+                                    //ResetRound();
+                                    netCode.NotifyOtherPlayerResetRound();
+
+                                    gameState = GameState.Idle; // just wait until notifications are complete
+
+                                    //gameState = GameState.Play;
+                                    ////GameFlow();
+                                    //Encrypt();
+                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
@@ -234,10 +227,15 @@ namespace Domino42
                             {
                                 if (winLoseMenu.Next == "RESTART")
                                 {
-                                    ResetMatch();
+                                    //ResetMatch();
+                                    netCode.NotifyOtherPlayerResetMatch();
 
-                                    gameState = GameState.Shuffle;
-                                    GameFlow();
+                                    //gameState = GameState.Shuffle;
+                                    ////GameFlow();
+                                    //Encrypt();
+                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
@@ -248,60 +246,21 @@ namespace Domino42
                             {
                                 if (winLoseMenu.Next == "RESTART")
                                 {
-                                    ResetMatch();
+                                    //ResetMatch();
+                                    netCode.NotifyOtherPlayerResetMatch();
 
-                                    gameState = GameState.Shuffle;
-                                    GameFlow();
+                                    //gameState = GameState.Shuffle;
+                                    ////GameFlow();
+                                    //Encrypt();
+                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
                         }
                 }
             }
-            //else
-            //{
-            //    switch (gameState)
-            //    {
-            //        case GameState.Play:
-            //            {
-            //                if (!players[CurrentPlayerTurn].TurnComplete && players[CurrentPlayerTurn].SelectedDomino != null)
-            //                {
-            //                    Debug.Log("PLAY - Not Host - 1 IF");
-
-            //                    var selectableDomino = players[CurrentPlayerTurn].SelectedDomino;
-            //                    var selectedDominoGameObject = players[CurrentPlayerTurn].transform.Find(selectableDomino.name).gameObject;
-
-            //                    Vector3 initPos = selectedDominoGameObject.transform.position;
-            //                    Quaternion initRot = selectedDominoGameObject.transform.rotation;
-
-            //                    // Remove domino from hand
-            //                    Destroy(selectedDominoGameObject);
-            //                    players[CurrentPlayerTurn].Hand.Remove((byte)dominoes.FindIndex(d => d == selectableDomino.name));
-
-            //                    // Move domino to play area
-            //                    GameObject newDomino = Instantiate(
-            //                        dominoPrefab,
-            //                        initPos,
-            //                        initRot,
-            //                        playerSpots[CurrentPlayerTurn].transform
-            //                    );
-            //                    newDomino.name = selectableDomino.name;
-            //                    newDomino.GetComponent<Selectable>().faceUp = true;
-
-            //                    dominoAnimator.AddDominoAnimation(
-            //                        newDomino,
-            //                        new Vector2(
-            //                            playerSpots[CurrentPlayerTurn].transform.position.x,
-            //                            playerSpots[CurrentPlayerTurn].transform.position.y),
-            //                        Quaternion.Euler(0, 0, 90),
-            //                        false);
-
-            //                    players[CurrentPlayerTurn].TurnComplete = true;
-            //                }
-            //                break;
-            //            }
-            //    }
-            //}
         }
 
         //****************** Game Flow *********************//
@@ -356,19 +315,22 @@ namespace Domino42
 
             if (CurrentPlayerTurn == -1)
             {
-                Debug.Log("Multiplayer - Bid - IF");
+                //Debug.Log("Multiplayer - Bid - IF");
 
-                // why? go to the next section
-                gameState = GameState.Trump;
-                //GameFlow();
-                Encrypt();
-                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-                
-                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                if (NetworkClient.Instance.IsHost)
+                {
+                    // why? go to the next section
+                    gameState = GameState.Trump;
+                    //GameFlow();
+                    Encrypt();
+                    netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                    netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                }
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
-                Debug.Log("Multiplayer - Bid - ELSE-IF");
+                //Debug.Log("Multiplayer - Bid - ELSE-IF");
 
                 // Player bid
                 if (CurrentPlayerTurn == 0)
@@ -383,7 +345,7 @@ namespace Domino42
             }
             else
             {
-                Debug.Log("Multiplayer - Bid - ELSE");
+                //Debug.Log("Multiplayer - Bid - ELSE");
 
                 // AI bid
                 MessageText.text = $"{players[CurrentPlayerTurn].name} is bidding...";
@@ -397,11 +359,11 @@ namespace Domino42
 
         public override void BidEnd(int amount)
         {
-            Debug.Log($"MultiplayerGame -> BidEnd:{amount}");
+            //Debug.Log($"MultiplayerGame -> BidEnd:{amount}");
 
             if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
             {
-                Debug.Log($"MultiplayerGame -> BidEnd:{amount} - IF");
+                //Debug.Log($"MultiplayerGame -> BidEnd:{amount} - IF");
 
                 players[CurrentPlayerTurn].BidAmount = amount;
 
@@ -430,12 +392,15 @@ namespace Domino42
             if (CurrentPlayerTurn == -1)
             {
                 // why? go to the next section
-                gameState = GameState.Play;
-                //GameFlow();
-                Encrypt();
-                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+                if (NetworkClient.Instance.IsHost)
+                {
+                    gameState = GameState.Play;
+                    //GameFlow();
+                    Encrypt();
+                    netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
 
-                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                    netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                }
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
@@ -475,7 +440,7 @@ namespace Domino42
 
         protected override void SetPlay()
         {
-            Debug.Log("SetPlay");
+            //Debug.Log("SetPlay");
             CurrentPlayerTurn = -1;
             for (int i = InitialPlayerTurn; i < (InitialPlayerTurn + 4); i++)
             {
@@ -486,17 +451,20 @@ namespace Domino42
                 }
             }
 
-            Debug.Log($"CurrentPlayerTurn: {CurrentPlayerTurn}");
+            //Debug.Log($"CurrentPlayerTurn: {CurrentPlayerTurn}");
 
             if (CurrentPlayerTurn == -1)
             {
-                //determine Game winner
-                gameState = GameState.RoundWinner;
-                //GameFlow();
-                Encrypt();
-                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+                if (NetworkClient.Instance.IsHost)
+                {
+                    //determine Game winner
+                    gameState = GameState.RoundWinner;
+                    //GameFlow();
+                    Encrypt();
+                    netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
 
-                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                    netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                }
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
@@ -529,6 +497,21 @@ namespace Domino42
 
             netCode.NotifyOtherPlayerDominoSelected(selectedDomino);
         }
+
+        //protected override void RoundWinner()
+        //{
+        //    base.RoundWinner();
+
+        //    if (NetworkClient.Instance.IsHost)
+        //    {
+        //        gameState = GameState.SetWinner;
+        //        //GameFlow();
+        //        Encrypt();
+        //        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+        //        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+        //    }
+        //}
 
         public override void AllAnimationsFinished()
         {
@@ -715,6 +698,57 @@ namespace Domino42
              */
             players[CurrentPlayerTurn].TurnComplete = true;
             players[CurrentPlayerTurn].SelectedDomino = selectableDomino;
+        }
+
+        public void OnResetRound()
+        {
+            Debug.Log("MultiplayerGame -> OnResetRound");
+
+            ResetRound();
+
+            if (NetworkClient.Instance.IsHost)
+            {
+                gameState = GameState.Play;
+                //GameFlow();
+                Encrypt();
+                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+            }
+        }
+
+        public void OnResetSet()
+        {
+            Debug.Log("MultiplayerGame -> OnResetSet");
+
+            ResetSet();
+
+            if (NetworkClient.Instance.IsHost)
+            {
+                gameState = GameState.Shuffle;
+                //GameFlow();
+                Encrypt();
+                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+            }
+        }
+
+        public void OnResetMatch()
+        {
+            Debug.Log("MultiplayerGame -> OnResetMatch");
+
+            ResetMatch();
+
+            if (NetworkClient.Instance.IsHost)
+            {
+                gameState = GameState.Shuffle;
+                //GameFlow();
+                Encrypt();
+                netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+            }
         }
     }
 }
