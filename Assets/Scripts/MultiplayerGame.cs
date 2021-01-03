@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Domino42
 {
@@ -74,6 +75,11 @@ namespace Domino42
             {
                 players[0].IsDealer = true;
             }
+        }
+
+        private void OnDestroy()
+        {
+            netCode.LeaveRoom();
         }
 
         // Update is called once per frame
@@ -471,7 +477,7 @@ namespace Domino42
                 // Player playing
                 if (CurrentPlayerTurn == 0)
                 {
-                    MessageText.text = string.Empty;
+                    MessageText.text = "Your turn...";
                 }
                 else
                 {
@@ -749,6 +755,11 @@ namespace Domino42
 
                 netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
             }
+        }
+
+        public void OnLeftRoom()
+        {
+            SceneManager.LoadScene(0);
         }
     }
 }

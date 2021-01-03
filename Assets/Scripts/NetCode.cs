@@ -48,6 +48,8 @@ namespace Domino42
         public UnityEvent OnResetSetEvent = new UnityEvent();
         public UnityEvent OnResetMatchEvent = new UnityEvent();
 
+        public UnityEvent OnLeftRoom = new UnityEvent();
+
         RoomPropertyAgent roomPropertyAgent;
         RoomRemoteEventAgent roomRemoteEventAgent;
 
@@ -78,6 +80,24 @@ namespace Domino42
         {
             Debug.Log("NetCode -> EnableRoomPropertyAgent");
             roomPropertyAgent.Initialize();
+        }
+
+        public void LeaveRoom()
+        {
+            NetworkClient.Instance.DisconnectFromRoom();
+            NetworkClient.Lobby.LeaveRoom((successful, error) => {
+
+                if (successful)
+                {
+                    Debug.Log("Left room");
+                }
+                else
+                {
+                    Debug.Log($"Failed to leave room {error}");
+                }
+
+                OnLeftRoom.Invoke();
+            });
         }
 
         public void ModifyGameData(EncryptedData encryptedData)
