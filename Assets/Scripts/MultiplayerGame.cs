@@ -22,10 +22,7 @@ namespace Domino42
         {
             base.Awake();
             Debug.Log("MultiplayerGame -> Awake");
-
-
-            //MessageText.text = $"[{gameState.ToString()}]";
-
+            
             netCode = FindObjectOfType<NetCode>();
 
             NetworkClient.Lobby.GetPlayersInRoom((successful, reply, error) =>
@@ -52,8 +49,7 @@ namespace Domino42
                             PlayerNames[2].text = playerName;
                         }
                     }
-
-                    //gameDataManager = new GameDataManager(localPlayer, remotePlayer, NetworkClient.Lobby.RoomId);
+                    
                     CalculateKey(NetworkClient.Lobby.RoomId);
                     Encrypt();
                     netCode.EnableRoomPropertyAgent();
@@ -104,13 +100,8 @@ namespace Domino42
                         {
                             if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidComplete)
                             {
-                                //Debug.Log("1 IF-S");
-
                                 if (players.Exists(player => !player.BidComplete))
                                 {
-                                    //Debug.Log("2 IF-S");
-
-                                    //CurrentPlayerTurn = (CurrentPlayerTurn + 1) % 4;
                                     CurrentPlayerTurn = -1;
                                     //GameFlow();
                                     Encrypt();
@@ -120,8 +111,6 @@ namespace Domino42
                                 }
                                 else
                                 {
-                                    //Debug.Log("ELSE");
-
                                     gameState = GameState.Trump;
                                     //GameFlow();
                                     Encrypt();
@@ -198,13 +187,6 @@ namespace Domino42
                                         netCode.NotifyOtherPlayerResetSet();
 
                                         gameState = GameState.Idle; // just wait until notifications are complete
-
-                                        //gameState = GameState.Shuffle;
-                                        ////GameFlow();
-                                        //Encrypt();
-                                        //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                                        //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                     }
                                 }
                                 else
@@ -216,13 +198,6 @@ namespace Domino42
                                     netCode.NotifyOtherPlayerResetRound();
 
                                     gameState = GameState.Idle; // just wait until notifications are complete
-
-                                    //gameState = GameState.Play;
-                                    ////GameFlow();
-                                    //Encrypt();
-                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
@@ -235,13 +210,6 @@ namespace Domino42
                                 {
                                     //ResetMatch();
                                     netCode.NotifyOtherPlayerResetMatch();
-
-                                    //gameState = GameState.Shuffle;
-                                    ////GameFlow();
-                                    //Encrypt();
-                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
@@ -254,13 +222,6 @@ namespace Domino42
                                 {
                                     //ResetMatch();
                                     netCode.NotifyOtherPlayerResetMatch();
-
-                                    //gameState = GameState.Shuffle;
-                                    ////GameFlow();
-                                    //Encrypt();
-                                    //netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-                                    //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                 }
                             }
                             break;
@@ -296,8 +257,7 @@ namespace Domino42
         protected override void Deal()
         {
             IsDealing = true;
-
-            //StartCoroutine(DominoDeal());
+            
             DominoDeal();
             DominoDealDealer();
 
@@ -321,8 +281,6 @@ namespace Domino42
 
             if (CurrentPlayerTurn == -1)
             {
-                //Debug.Log("Multiplayer - Bid - IF");
-
                 if (NetworkClient.Instance.IsHost)
                 {
                     // why? go to the next section
@@ -336,8 +294,6 @@ namespace Domino42
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
-                //Debug.Log("Multiplayer - Bid - ELSE-IF");
-
                 // Player bid
                 if (CurrentPlayerTurn == 0)
                 {
@@ -351,8 +307,6 @@ namespace Domino42
             }
             else
             {
-                //Debug.Log("Multiplayer - Bid - ELSE");
-
                 // AI bid
                 MessageText.text = $"{players[CurrentPlayerTurn].name} is bidding...";
 
@@ -365,12 +319,8 @@ namespace Domino42
 
         public override void BidEnd(int amount)
         {
-            //Debug.Log($"MultiplayerGame -> BidEnd:{amount}");
-
             if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
             {
-                //Debug.Log($"MultiplayerGame -> BidEnd:{amount} - IF");
-
                 players[CurrentPlayerTurn].BidAmount = amount;
 
                 playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
@@ -435,18 +385,12 @@ namespace Domino42
         {
             if (gameState == GameState.Trump && CurrentPlayerTurn == 0)
             {
-                //players[CurrentPlayerTurn].Trump = (Trump)trump;
-                //Trump = (Trump)trump;
-
-                //trumpText.text = trump.ToString();
-
                 netCode.NotifyHostPlayerTrumpSelected(trump);
             }
         }
 
         protected override void SetPlay()
         {
-            //Debug.Log("SetPlay");
             CurrentPlayerTurn = -1;
             for (int i = InitialPlayerTurn; i < (InitialPlayerTurn + 4); i++)
             {
@@ -456,9 +400,7 @@ namespace Domino42
                     break;
                 }
             }
-
-            //Debug.Log($"CurrentPlayerTurn: {CurrentPlayerTurn}");
-
+            
             if (CurrentPlayerTurn == -1)
             {
                 if (NetworkClient.Instance.IsHost)
@@ -503,22 +445,7 @@ namespace Domino42
 
             netCode.NotifyOtherPlayerDominoSelected(selectedDomino);
         }
-
-        //protected override void RoundWinner()
-        //{
-        //    base.RoundWinner();
-
-        //    if (NetworkClient.Instance.IsHost)
-        //    {
-        //        gameState = GameState.SetWinner;
-        //        //GameFlow();
-        //        Encrypt();
-        //        netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
-
-        //        netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
-        //    }
-        //}
-
+        
         public override void AllAnimationsFinished()
         {
             Debug.Log("MultiplayerGame -> AllAnimationsFinished");
@@ -632,12 +559,6 @@ namespace Domino42
             players[CurrentPlayerTurn].BidComplete = true;
 
             playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
-
-            //Encrypt();
-
-            //netCode.ModifyGameData(EncryptedData());
-
-            //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
         }
 
         public void OnTrumpSelected(int trump)
@@ -648,12 +569,6 @@ namespace Domino42
             Trump = (Trump)trump;
 
             trumpText.text = trump.ToString();
-
-            //Encrypt();
-
-            //netCode.ModifyGameData(EncryptedData());
-
-            //netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
         }
 
         public void OnDominoSelected(byte selectedDomino)
@@ -697,11 +612,7 @@ namespace Domino42
                 Quaternion.Euler(0, 0, 90),
                 //false);
                 true);
-
-            /*
-             * Set 'TurnComplete' to true in the update
-             * want to do this separately to allow for non-host to animate action
-             */
+            
             players[CurrentPlayerTurn].TurnComplete = true;
             players[CurrentPlayerTurn].SelectedDomino = selectableDomino;
         }

@@ -1076,41 +1076,7 @@ namespace Domino42
         }
 
         //****************** Encryption Data *********************//
-
-        public class PlayerData
-        {
-            public List<string> Hand;
-            public bool IsDealer;
-            public bool IsAI;
-            public string Id;
-            public int? BidAmount;
-            public Trump? Trump;
-            public bool TurnComplete;
-            public Selectable SelectedDomino;
-            public bool IsActive;
-
-            public string playerBidText;
-        }
-
-        public class GameData
-        {
-            public GameState GameState;
-            public bool? IsDealing;
-            public int? CurrentBidAmount;
-            public string WhoBidId;
-            public IEnumerable<string> playerBidTexts;
-            public string trumpText;
-            public Trump Trump;
-            public string InitialPlayerTurnId;
-            public string CurrentPlayerTurnId;
-            public bool RoundComplete;
-            public bool? SetComplete;
-            public int RoundScoreUs;
-            public int RoundScoreThem;
-            public int SetScoreUs;
-            public int SetScoreThem;
-        }
-
+        
         protected void CalculateKey(string roomId)
         {
             string roomIdSubString = roomId.Substring(0, 16);
@@ -1140,8 +1106,7 @@ namespace Domino42
                 message.PushUTF8ShortString(players[i].Trump.HasValue ? ((int)players[i].Trump).ToString() : string.Empty);
 
                 message.Push(players[i].TurnComplete);
-
-                //Debug.Log($"SelectedDomino.name:'{players[i].SelectedDomino?.name ?? string.Empty}'");
+                
                 message.PushUTF8ShortString(players[i].SelectedDomino?.name ?? string.Empty);
 
                 message.Push(players[i].IsActive);
@@ -1219,7 +1184,7 @@ namespace Domino42
                 players[playerIndex].TurnComplete = message.PopBool();
 
                 string selectedDominoName = message.PopUTF8ShortString();
-                //Debug.Log($"selected domino name (pop): {selectedDominoName}");
+
                 if (!string.IsNullOrWhiteSpace(selectedDominoName))
                 {
                     var selectedDominoTransform = players[playerIndex].transform.Find(selectedDominoName);
@@ -1233,7 +1198,6 @@ namespace Domino42
                         var selectedDominoGameObject = selectedDominoTransform.gameObject;
                         var selectableDomino = selectedDominoGameObject.GetComponent<Selectable>();
                         players[playerIndex].SelectedDomino = selectableDomino;
-                        //Debug.Log($"selected domino name: '{players[playerIndex].SelectedDomino?.name ?? string.Empty}'");
                     }
                 }
 
@@ -1313,10 +1277,5 @@ namespace Domino42
         {
             GameFlow();
         }
-    }
-
-    public static class Extensions
-    {
-
     }
 }
