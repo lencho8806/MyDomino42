@@ -37,6 +37,17 @@ namespace Domino42
             NetworkClient.Lobby.OnRoomReadyEvent += OnRoomReadyEvent;
         }
 
+        private void Update()
+        {
+            if (PopoverBackground.activeSelf && EnterNicknamePopover.activeSelf)
+            {
+                if (!string.IsNullOrWhiteSpace(NicknameInputField.text) && Input.GetKeyDown(KeyCode.Return))
+                {
+                    OnConfirmNicknameClicked();
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             if (NetworkClient.Lobby != null)
@@ -50,6 +61,8 @@ namespace Domino42
         {
             PopoverBackground.SetActive(true);
             EnterNicknamePopover.SetActive(true);
+
+            NicknameInputField.Select();
         }
 
         void ShowJoinedRoomPopover()

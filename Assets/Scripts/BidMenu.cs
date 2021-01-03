@@ -116,10 +116,7 @@ namespace Domino42
 
         public void BidEnd()
         {
-            //var domino42 = FindObjectOfType<Game>();
-            domino42.players[domino42.CurrentPlayerTurn].BidAmount = Amount;
-
-            domino42.playerBidTexts[domino42.CurrentPlayerTurn].text = Amount.ToString();
+            domino42.BidEnd(Amount);
 
             bidMenuUI.SetActive(false);
             Time.timeScale = 1f;

@@ -92,11 +92,7 @@ namespace Domino42
 
         public void TrumpEnd()
         {
-            //var domino42 = FindObjectOfType<Game>();
-            domino42.players[domino42.CurrentPlayerTurn].Trump = (Trump)Trump;
-            domino42.Trump = (Trump)Trump;
-
-            domino42.trumpText.text = domino42.Trump.ToString();
+            domino42.TrumpEnd(Trump);
 
             trumpMenuUI.SetActive(false);
             Time.timeScale = 1f;
@@ -118,7 +114,7 @@ namespace Domino42
             List<string> dominoNums = new List<string>();
             domino42.players[domino42.CurrentPlayerTurn].Hand.ForEach(domino =>
             {
-                var dominoSplit = domino.Split('_');
+                var dominoSplit = domino42.dominoes[domino].Split('_');
                 dominoNums.Add(dominoSplit[0]);
                 dominoNums.Add(dominoSplit[1]);
             });
