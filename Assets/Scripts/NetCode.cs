@@ -14,6 +14,12 @@ namespace Domino42
     }
 
     [Serializable]
+    public class GameOptionsEvent : UnityEvent<int, bool, bool>
+    {
+
+    }
+
+    [Serializable]
     public class BidSelectedEvent : UnityEvent<int>
     {
 
@@ -24,7 +30,7 @@ namespace Domino42
     {
 
     }
-
+    
     [Serializable]
     public class DominoSelectedEvent : UnityEvent<byte>
     {
@@ -37,6 +43,8 @@ namespace Domino42
         public GameDataEvent OnGameDataChangedEvent = new GameDataEvent();
         
         public UnityEvent OnGameStateChangedEvent = new UnityEvent();
+
+        public GameOptionsEvent OnGameOptionsEvent = new GameOptionsEvent();
 
         public BidSelectedEvent OnBidSelectedEvent = new BidSelectedEvent();
 
@@ -57,6 +65,7 @@ namespace Domino42
         const string GAME_STATE_CHANGED = "GameStateChanged";
         const string BID_SELECTED = "BidSelected";
         const string TRUMP_SELECTED = "TrumpSelected";
+        const string GAME_OPTIONS = "GameOptions";
         const string DOMINO_SELECTED = "DominoSelected";
         const string RESET_ROUND = "ResetRound";
         const string RESET_SET = "ResetSet";
@@ -110,6 +119,21 @@ namespace Domino42
         {
             Debug.Log("NetCode -> NotifyOtherPlayersGameStateChanged");
             roomRemoteEventAgent.Invoke(GAME_STATE_CHANGED);
+        }
+
+        public void NotifyOtherPlayersGameOptions(int marks, bool isNelO, bool isForceBid)
+        {
+            Debug.Log("NetCode -> NotifyOtherPlayersGameOptions");
+
+            SWNetworkMessage message = new SWNetworkMessage();
+
+            message.Push(marks);
+
+            message.Push(isNelO);
+
+            message.Push(isForceBid);
+
+            roomRemoteEventAgent.Invoke(GAME_OPTIONS, message);
         }
 
         public void NotifyHostPlayerBidSelected(int amount)
@@ -186,7 +210,17 @@ namespace Domino42
             Debug.Log("NetCode -> OnGameStateChangedRemoteEvent");
             OnGameStateChangedEvent.Invoke();
         }
-        
+
+        public void OnGameOptionsRemoteEvent(SWNetworkMessage message)
+        {
+            int marks = message.PopInt32();
+            bool nelO = message.PopBool();
+            bool forceBid = message.PopBool();
+            Debug.Log($"NetCode -> OnGameOptionsRemoteEvent:{marks}-{nelO.ToString()}-{forceBid.ToString()}");
+
+            OnGameOptionsEvent.Invoke(marks, nelO, forceBid);
+        }
+
         public void OnBidSelectedRemoteEvent(SWNetworkMessage message)
         {
             int amount = message.PopInt32();

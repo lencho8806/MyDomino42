@@ -26,6 +26,8 @@ namespace Domino42
         public GameObject Player1Portrait;
         public GameObject Player2Portrait;
 
+        public GameObject Rules;
+
         string nickname;
 
         private void Start()
@@ -141,6 +143,13 @@ namespace Domino42
                     State = LobbyState.JoinedRoom;
                     ShowJoinedRoomPopover();
                     GetPlayersInTheRoom();
+
+                    if (NetworkClient.Lobby.IsOwner)
+                    {
+                        FindObjectOfType<GameOptions>().Init();
+
+                        Rules.SetActive(true);
+                    }
                 }
                 else
                 {
@@ -245,7 +254,7 @@ namespace Domino42
         /// <summary>
         /// Practice button was clicked.
         /// </summary>
-        public void OnPracticeClicked()
+        public static void OnPracticeClicked()
         {
             Debug.Log("OnPracticeClicked");
             SceneManager.LoadScene("GameScene");
