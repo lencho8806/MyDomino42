@@ -67,9 +67,16 @@ namespace Domino42
         {
             Debug.Log("Multiplayer Game Start");
 
+            //MarkText.text = $"{marksToWin}M";
+
             if (NetworkClient.Instance.IsHost)
             {
                 players[0].IsDealer = true;
+            }
+
+            if (NetworkClient.Lobby.IsOwner)
+            {
+                netCode.NotifyOtherPlayersGameOptions(marksToWin, isNelO, isForceBid);
             }
         }
 
@@ -162,7 +169,7 @@ namespace Domino42
                                 if (SetComplete == true)
                                 {
                                     Debug.Log("SetComplete == true");
-                                    if (SetScoreUs >= 3)
+                                    if (SetScoreUs >= marksToWin)
                                     {
                                         gameState = GameState.Win;
                                         //GameFlow();
@@ -171,7 +178,7 @@ namespace Domino42
 
                                         netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
                                     }
-                                    else if (SetScoreThem >= 3)
+                                    else if (SetScoreThem >= marksToWin)
                                     {
                                         gameState = GameState.Lose;
                                         //GameFlow();
@@ -544,7 +551,19 @@ namespace Domino42
             Decrypt();
             Encrypt();
         }
-        
+
+        public void OnGameOptions(int marks, bool nelO, bool forceBid)
+        {
+            Debug.Log($"MultiplayerGame -> OnGameOptions:{marks}-{nelO.ToString()}-{forceBid.ToString()}");
+
+            marksToWin = marks;
+            MarkText.text = $"{marksToWin}M";
+
+            isNelO = nelO;
+
+            isForceBid = forceBid;
+        }
+
         public void OnGameStateChanged()
         {
             Debug.Log("MultiplayerGame -> OnGameStateChanged");

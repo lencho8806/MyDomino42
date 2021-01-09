@@ -25,6 +25,11 @@ namespace Domino42
 
     public class Game : MonoBehaviour
     {
+        //Rules
+        protected static int marksToWin = 3;
+        protected static bool isNelO = false;
+        protected static bool isForceBid = false;
+
         public Sprite[] dominoFaces;
         public GameObject dominoPrefab;
         [SerializeField]
@@ -61,6 +66,7 @@ namespace Domino42
         public Text SetUsText;
         public int SetScoreThem { get; private set; } = 0;
         public Text SetThemText;
+        public Text MarkText;
 
         public WinLoseMenu winLoseMenu;
 
@@ -85,7 +91,7 @@ namespace Domino42
         protected GameState gameState = GameState.Idle;
         public GameState CurrGameState { get { return gameState; } }
 
-        byte[] encryptionKey;
+        protected byte[] encryptionKey;
         byte[] safeData;
         
         protected void Awake()
@@ -96,11 +102,17 @@ namespace Domino42
             }
 
             MessageText.text = string.Empty;
+
+            //MarkText.text = $"{marksToWin}M";
         }
 
         // Start is called before the first frame update
         protected void Start()
         {
+            Debug.Log($"isNelO : {(isNelO ? "true" : "false")}");
+
+            MarkText.text = $"{marksToWin}M";
+
             gameState = GameState.Shuffle;
             
             GameFlow();
@@ -109,8 +121,6 @@ namespace Domino42
         // Update is called once per frame
         protected void Update()
         {
-            Debug.Log("Base - UPDATE");
-
             switch (gameState)
             {
                 case GameState.Deal:
@@ -182,12 +192,12 @@ namespace Domino42
                         {
                             if (SetComplete == true)
                             {
-                                if (SetScoreUs >= 3)
+                                if (SetScoreUs >= marksToWin)
                                 {
                                     gameState = GameState.Win;
                                     GameFlow();
                                 }
-                                else if (SetScoreThem >= 3)
+                                else if (SetScoreThem >= marksToWin)
                                 {
                                     gameState = GameState.Lose;
                                     GameFlow();
@@ -1149,7 +1159,13 @@ namespace Domino42
             //message.Push(SetScoreUs);
 
             //message.Push(SetScoreThem);
-            
+
+            //message.Push(marksToWin);
+
+            //message.Push(isNelO);
+
+            //message.Push(isForceBid);
+
             safeData = AES.EncryptAES128(message.ToArray(), encryptionKey);
         }
 
@@ -1239,7 +1255,7 @@ namespace Domino42
             
             int setCompleteInt = message.PopInt32();
             SetComplete = setCompleteInt == -1 ? (bool?)null : setCompleteInt == 1 ? true : false;
-            
+
             //RoundScoreUs = message.PopInt32();
             //RoundUsText.text = $"Us: {RoundScoreUs}";
 
@@ -1251,6 +1267,13 @@ namespace Domino42
 
             //SetScoreThem = message.PopInt32();
             //SetThemText.text = $"Them: {SetScoreThem}";
+
+            //marksToWin = message.PopInt32();
+            //MarkText.text = $"{marksToWin}M";
+
+            //isNelO = message.PopBool();
+
+            //isForceBid = message.PopBool();
         }
 
         public EncryptedData EncryptedData()
