@@ -88,6 +88,19 @@ namespace Domino42
         {
             Debug.Log("Pass...");
 
+            if (domino42.players[domino42.CurrentPlayerTurn].IsDealer && domino42.IsForceBid)
+            {
+                if (domino42.players.Any(p => p.BidAmount != -1 && p.Id != domino42.players[domino42.CurrentPlayerTurn].Id))
+                {
+                    // continue...
+                }
+                else
+                {
+                    domino42.MessageText.text = "(Dealer has to bid)";
+                    return;
+                }
+            }
+
             Amount = -1;
 
             textAmount.text = "Pass";
@@ -108,6 +121,22 @@ namespace Domino42
                 {
                     if (Amount <= maxBid && Amount != -1)
                         return;
+                }
+            }
+
+            if (domino42.players[domino42.CurrentPlayerTurn].IsDealer && domino42.IsForceBid)
+            {
+                if (domino42.players.Any(p => p.BidAmount != -1 && p.Id != domino42.players[domino42.CurrentPlayerTurn].Id))
+                {
+                    // continue...
+                }
+                else
+                {
+                    if (Amount == -1)
+                    {
+                        domino42.MessageText.text = "(Dealer has to bid)";
+                        return;
+                    }
                 }
             }
 

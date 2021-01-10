@@ -27,8 +27,11 @@ namespace Domino42
     {
         //Rules
         protected static int marksToWin = 3;
+        public int MarksToWin { get { return marksToWin; } }
         protected static bool isNelO = false;
-        protected static bool isForceBid = false;
+        public bool IsNelO { get { return isNelO; } }
+        protected static bool isForceBid = true;
+        public bool IsForceBid { get { return isForceBid; } }
 
         public Sprite[] dominoFaces;
         public GameObject dominoPrefab;
@@ -96,6 +99,17 @@ namespace Domino42
         
         protected void Awake()
         {
+            var gameOptions = FindObjectOfType<GameOptions>();
+
+            if (gameOptions != null)
+            {
+                marksToWin = gameOptions.marks;
+                isNelO = gameOptions.isNelO;
+                isForceBid = gameOptions.isForceBid;
+
+                Destroy(gameOptions);
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 players[i].name = PlayerNames[i].text;
@@ -143,8 +157,17 @@ namespace Domino42
                             }
                             else
                             {
-                                gameState = GameState.Trump;
-                                GameFlow();
+                                if (!isForceBid && players.All(p => p.BidAmount == -1))
+                                {
+                                    ResetSet();
+                                    gameState = GameState.Shuffle;
+                                    GameFlow();
+                                }
+                                else
+                                {
+                                    gameState = GameState.Trump;
+                                    GameFlow();
+                                }
                             }
                         }
                         break;
@@ -579,7 +602,21 @@ namespace Domino42
 
             int bidAmmount = -1;
 
-            if (bidRandom.Next(0, 10) < 4)
+            // Force Bid option
+            bool forceBid = false;
+            if (players[CurrentPlayerTurn].IsDealer && IsForceBid)
+            {
+                if (players.Any(p => p.BidAmount != -1 && p.Id != players[CurrentPlayerTurn].Id))
+                {
+                    // continue...
+                }
+                else
+                {
+                    forceBid = true;
+                }
+            }
+
+            if (bidRandom.Next(0, 10) < 4 || forceBid)
             {
                 int? maxBid = players.Max(player => player.BidAmount);
 
@@ -612,7 +649,7 @@ namespace Domino42
             if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
             {
                 players[CurrentPlayerTurn].BidAmount = amount;
-
+                players[CurrentPlayerTurn].BidComplete = true;
                 playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
             }
         }
@@ -966,10 +1003,14 @@ namespace Domino42
 
             for (int i = 0; i < playerSpots.Count; i++)
             {
-                var childGameObj = playerSpots[i].gameObject.transform.Find(players[i].SelectedDomino.name).gameObject;
-                Destroy(childGameObj);
+                if (!string.IsNullOrWhiteSpace(players[i]?.SelectedDomino?.name))
+                {
+                    var childGameObj = playerSpots[i].gameObject.transform.Find(players[i].SelectedDomino.name).gameObject;
 
-                discardPile.Add((byte)dominoes.FindIndex(d => d == childGameObj.name));
+                    Destroy(childGameObj);
+
+                    discardPile.Add((byte)dominoes.FindIndex(d => d == childGameObj.name));
+                }
             }
         }
 

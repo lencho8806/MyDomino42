@@ -254,7 +254,7 @@ namespace Domino42
         /// <summary>
         /// Practice button was clicked.
         /// </summary>
-        public static void OnPracticeClicked()
+        public void OnPracticeClicked()
         {
             Debug.Log("OnPracticeClicked");
             SceneManager.LoadScene("GameScene");
