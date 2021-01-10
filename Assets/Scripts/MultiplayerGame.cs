@@ -74,9 +74,23 @@ namespace Domino42
                 players[0].IsDealer = true;
             }
 
+            var gameOptions = FindObjectOfType<GameOptions>();
+
             if (NetworkClient.Lobby.IsOwner)
             {
+                if (gameOptions != null)
+                {
+                    marksToWin = gameOptions.marks;
+                    isNelO = gameOptions.isNelO;
+                    isForceBid = gameOptions.isForceBid;
+                }
+
                 netCode.NotifyOtherPlayersGameOptions(marksToWin, isNelO, isForceBid);
+            }
+
+            if (gameOptions != null)
+            {
+                Destroy(gameOptions);
             }
         }
 
