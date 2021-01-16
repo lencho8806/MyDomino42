@@ -1308,34 +1308,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d2bbb010c64359479d10942f81e0c43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dominoFaces: []
-  dominoPrefab: {fileID: 0}
-  dominoAnimator: {fileID: 0}
-  players: []
-  deck: 
-  discardPile: 
-  WhoBid: -1
-  bidMenu: {fileID: 0}
-  playerBidTexts: []
-  trumpMenu: {fileID: 0}
-  trumpText: {fileID: 0}
-  Trump: 0
-  InitialPlayerTurn: -1
-  CurrentPlayerTurn: -1
-  RoundComplete: 0
-  playerSpots: []
-  RoundUsText: {fileID: 0}
-  RoundThemText: {fileID: 0}
-  SetUsText: {fileID: 0}
-  SetThemText: {fileID: 0}
-  MarkText: {fileID: 0}
-  winLoseMenu: {fileID: 0}
-  PlayerNames: []
-  MessageText: {fileID: 0}
   setMarkInputField: {fileID: 698839091}
   neloToggle: {fileID: 709338886}
   forceBidToggle: {fileID: 1479029929}
   Rules: {fileID: 1053296623}
+  marks: 3
+  isNelO: 0
+  isForceBid: 0
 --- !u!4 &550053132
 Transform:
   m_ObjectHideFlags: 0
@@ -2112,7 +2091,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1792671088}
+      - m_Target: {fileID: 550053131}
         m_MethodName: OnPracticeClicked
         m_Mode: 1
         m_Arguments:

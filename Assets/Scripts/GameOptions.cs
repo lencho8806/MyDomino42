@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GameOptions : Game
+public class GameOptions : MonoBehaviour
 {
     [SerializeField]
     InputField setMarkInputField;
@@ -16,10 +16,21 @@ public class GameOptions : Game
     Toggle forceBidToggle;
 
     public GameObject Rules;
+
+    public int marks = 3;
+    public bool isNelO = false;
+    public bool isForceBid = false;
+
+    bool isPractice = false;
     
+    private void Awake()
+    {
+        DontDestroyOnLoad(transform.gameObject);
+    }
+
     public void Init()
     {
-        setMarkInputField.text = marksToWin.ToString();
+        setMarkInputField.text = marks.ToString();
         neloToggle.isOn = isNelO;
         forceBidToggle.isOn = isForceBid;
     }
@@ -39,23 +50,39 @@ public class GameOptions : Game
     public void UpdateSetMark(string newValue)
     {
         if (string.IsNullOrWhiteSpace(newValue))
-            marksToWin = 0;
+            marks = 0;
         else
-            marksToWin = int.Parse(newValue);
+            marks = int.Parse(newValue);
 
-        Debug.Log($"marks to win : {marksToWin}");
+        Debug.Log($"marks to win : {marks}");
+    }
+
+    public void OpenRulesWidget()
+    {
+        Rules.SetActive(true);
     }
 
     public void CloseRulesWidget()
     {
-        Rules.SetActive(false);
+        if (isPractice)
+        {
+            if (marks > 0)
+            {
+                SceneManager.LoadScene("GameScene");
+            }
+        }
+        else
+        {
+            Rules.SetActive(false);
+        }
     }
 
     public void OnPracticeClicked()
     {
-        if (marksToWin > 0)
-        {
-            SceneManager.LoadScene("GameScene");
-        }
+        isPractice = true;
+
+        OpenRulesWidget();
+
+        Init();
     }
 }

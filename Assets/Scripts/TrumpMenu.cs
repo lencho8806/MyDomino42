@@ -44,11 +44,19 @@ namespace Domino42
 
             switch (Trump)
             {
+                case -2:
+                    //do nothing... min option...
+                    break;
                 case -1:
-                    // do nothing... min...
+                    if (domino42.IsNelO && domino42.players[domino42.CurrentPlayerTurn].BidAmount >= 42)
+                    {
+                        Trump--;
+                        textAmount.text = "Nel-O";
+                        textAmount.fontSize = 80;
+                    }
+
                     break;
                 case 0:
-                    // set to pass
                     Trump--;
                     textAmount.text = "Follow Me";
                     textAmount.fontSize = 40;
@@ -67,6 +75,11 @@ namespace Domino42
 
             switch (Trump)
             {
+                case -2:
+                    Trump++;
+                    textAmount.text = "Follow Me";
+                    textAmount.fontSize = 40;
+                    break;
                 case 6:
                     Trump++;
                     textAmount.text = "Doubles";

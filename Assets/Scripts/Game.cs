@@ -12,6 +12,7 @@ namespace Domino42
 {
     public enum Trump
     {
+        NELO = -2,
         FOLLOW_ME = -1,
         ZERO,
         ONE,
@@ -27,8 +28,11 @@ namespace Domino42
     {
         //Rules
         protected static int marksToWin = 3;
-        protected static bool isNelO = false;
-        protected static bool isForceBid = false;
+        public int MarksToWin { get { return marksToWin; } }
+        protected static bool isNelO = true;
+        public bool IsNelO { get { return isNelO; } }
+        protected static bool isForceBid = true;
+        public bool IsForceBid { get { return isForceBid; } }
 
         public Sprite[] dominoFaces;
         public GameObject dominoPrefab;
@@ -96,6 +100,17 @@ namespace Domino42
         
         protected void Awake()
         {
+            var gameOptions = FindObjectOfType<GameOptions>();
+
+            if (gameOptions != null)
+            {
+                marksToWin = gameOptions.marks;
+                isNelO = gameOptions.isNelO;
+                isForceBid = gameOptions.isForceBid;
+
+                Destroy(gameOptions);
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 players[i].name = PlayerNames[i].text;
@@ -137,14 +152,29 @@ namespace Domino42
                     {
                         if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidAmount != null)
                         {
-                            if (players.Exists(player => player.BidAmount == null))
+                            if (players[CurrentPlayerTurn].BidAmount == 43)
+                            {
+                                // end bidding... max bid made...
+                                gameState = GameState.Trump;
+                                GameFlow();
+                            }
+                            else if (players.Exists(player => player.BidAmount == null))
                             {
                                 GameFlow();
                             }
                             else
                             {
-                                gameState = GameState.Trump;
-                                GameFlow();
+                                if (!isForceBid && players.All(p => p.BidAmount == -1))
+                                {
+                                    ResetSet();
+                                    gameState = GameState.Shuffle;
+                                    GameFlow();
+                                }
+                                else
+                                {
+                                    gameState = GameState.Trump;
+                                    GameFlow();
+                                }
                             }
                         }
                         break;
@@ -579,7 +609,21 @@ namespace Domino42
 
             int bidAmmount = -1;
 
-            if (bidRandom.Next(0, 10) < 4)
+            // Force Bid option
+            bool forceBid = false;
+            if (players[CurrentPlayerTurn].IsDealer && IsForceBid)
+            {
+                if (players.Any(p => p.BidAmount != -1 && p.Id != players[CurrentPlayerTurn].Id))
+                {
+                    // continue...
+                }
+                else
+                {
+                    forceBid = true;
+                }
+            }
+
+            if (bidRandom.Next(0, 10) < 4 || forceBid)
             {
                 int? maxBid = players.Max(player => player.BidAmount);
 
@@ -612,8 +656,9 @@ namespace Domino42
             if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
             {
                 players[CurrentPlayerTurn].BidAmount = amount;
-
-                playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
+                players[CurrentPlayerTurn].BidComplete = true;
+                
+                playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
             }
         }
 
@@ -700,7 +745,7 @@ namespace Domino42
                 players[CurrentPlayerTurn].Trump = (Trump)trump;
                 Trump = (Trump)trump;
 
-                trumpText.text = trump.ToString();
+                trumpText.text = Trump.ToString();
             }
         }
 
@@ -716,12 +761,18 @@ namespace Domino42
                     break;
                 }
             }
-            
+
+            int partnerIndex = (WhoBid + 2) % 4;
+
             if (CurrentPlayerTurn == -1)
             {
                 //determine Game winner
                 gameState = GameState.RoundWinner;
                 GameFlow();
+            }
+            else if (isNelO && Trump == Trump.NELO && CurrentPlayerTurn == partnerIndex)
+            {
+                StartCoroutine(PlayNeloSkipTurn(CurrentPlayerTurn));
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
@@ -819,6 +870,16 @@ namespace Domino42
             yield return new WaitForSeconds(2f);
         }
 
+        protected IEnumerator PlayNeloSkipTurn(int playerIndex)
+        {
+            MessageText.text = $"{players[CurrentPlayerTurn].name}'s turn is skipped...";
+
+            yield return new WaitForSeconds(2f);
+
+            players[playerIndex].TurnComplete = true;
+            players[playerIndex].SelectedDomino = null;
+        }
+
         public virtual void SelectDominoFromHand(int playerIndex, byte selectedDomino)
         {
             // Verify selected domino is in hand...?
@@ -875,7 +936,7 @@ namespace Domino42
             List<int> playersWithTrump = new List<int>();
             int playerWinnerIndex = -1;
 
-            if (players.Exists(p => p.SelectedDomino.name.Contains(((int)Trump).ToString())))
+            if (players.Exists(p => p.SelectedDomino?.name?.Contains(((int)Trump).ToString()) ?? false))
             {
                 playerWinnerIndex = GetPlayerHandWinner((int)Trump);
             }
@@ -913,7 +974,7 @@ namespace Domino42
             int playerIndex = -1;
             for (int i = 0; i < players.Count; i++)
             {
-                if (players[i].SelectedDomino.name.Contains((trump).ToString()))
+                if (players[i].SelectedDomino?.name?.Contains((trump).ToString()) ?? false)
                 {
                     if (playerIndex == -1)
                     {
@@ -945,9 +1006,9 @@ namespace Domino42
 
             players.ForEach(player =>
             {
-                if (player.SelectedDomino.sum % 5 == 0)
+                if (((player.SelectedDomino?.sum ?? 0) % 5) == 0)
                 {
-                    gameScore += player.SelectedDomino.sum;
+                    gameScore += player.SelectedDomino?.sum ?? 0;
                 }
             });
 
@@ -966,10 +1027,14 @@ namespace Domino42
 
             for (int i = 0; i < playerSpots.Count; i++)
             {
-                var childGameObj = playerSpots[i].gameObject.transform.Find(players[i].SelectedDomino.name).gameObject;
-                Destroy(childGameObj);
+                if (!string.IsNullOrWhiteSpace(players[i]?.SelectedDomino?.name))
+                {
+                    var childGameObj = playerSpots[i].gameObject.transform.Find(players[i].SelectedDomino.name).gameObject;
 
-                discardPile.Add((byte)dominoes.FindIndex(d => d == childGameObj.name));
+                    Destroy(childGameObj);
+
+                    discardPile.Add((byte)dominoes.FindIndex(d => d == childGameObj.name));
+                }
             }
         }
 
@@ -1047,38 +1112,85 @@ namespace Domino42
 
             yield return new WaitForSeconds(2f);
 
+            int setScoreAmount = CurrentBidAmount == 43 ? 2 : 1;
+            int bidAmount = CurrentBidAmount > 42 ? 42 : CurrentBidAmount.Value;
+
             if (WhoBid % 2 == 0)
             {
-                if (RoundScoreUs >= CurrentBidAmount)
+                if (isNelO && Trump == Trump.NELO)
                 {
-                    SetScoreUs += 1;
-                    SetUsText.text = $"Us: {SetScoreUs}";
-                    SetComplete = true;
+                    if (RoundScoreUs > 0)
+                    {
+                        SetScoreThem += setScoreAmount;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
 
-                    MessageText.text = $"We won the set";
+                        MessageText.text = $"They won the set";
+                    }
+                    else if (players[InitialPlayerTurn].Hand.Count == 0)
+                    {
+                        SetScoreUs += setScoreAmount;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+
+                        MessageText.text = $"We won the set";
+                    }
                 }
-                else if (RoundScoreThem > (42 - CurrentBidAmount))
+                else
                 {
-                    SetScoreThem += 1;
-                    SetThemText.text = $"Them: {SetScoreThem}";
-                    SetComplete = true;
+                    if (RoundScoreUs >= bidAmount)
+                    {
+                        SetScoreUs += setScoreAmount;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
 
-                    MessageText.text = $"They won the set";
+                        MessageText.text = $"We won the set";
+                    }
+                    else if (RoundScoreThem > (42 - bidAmount))
+                    {
+                        SetScoreThem += setScoreAmount;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+
+                        MessageText.text = $"They won the set";
+                    }
                 }
             }
             else
             {
-                if (RoundScoreThem >= CurrentBidAmount)
+                if (isNelO && Trump == Trump.NELO)
                 {
-                    SetScoreThem += 1;
-                    SetThemText.text = $"Them: {SetScoreThem}";
-                    SetComplete = true;
+                    if (RoundScoreThem > 0)
+                    {
+                        SetScoreUs += setScoreAmount;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+
+                        MessageText.text = $"We won the set";
+                    }
+                    else if (players[InitialPlayerTurn].Hand.Count == 0)
+                    {
+                        SetScoreThem += setScoreAmount;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+
+                        MessageText.text = $"They won the set";
+                    }
                 }
-                else if (RoundScoreUs > (42 - CurrentBidAmount))
+                else
                 {
-                    SetScoreUs += 1;
-                    SetUsText.text = $"Us: {SetScoreUs}";
-                    SetComplete = true;
+                    if (RoundScoreThem >= bidAmount)
+                    {
+                        SetScoreThem += setScoreAmount;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+                    }
+                    else if (RoundScoreUs > (42 - bidAmount))
+                    {
+                        SetScoreUs += setScoreAmount;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+                    }
                 }
             }
 

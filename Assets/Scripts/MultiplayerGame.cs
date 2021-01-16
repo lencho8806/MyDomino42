@@ -74,9 +74,23 @@ namespace Domino42
                 players[0].IsDealer = true;
             }
 
+            var gameOptions = FindObjectOfType<GameOptions>();
+
             if (NetworkClient.Lobby.IsOwner)
             {
+                if (gameOptions != null)
+                {
+                    marksToWin = gameOptions.marks;
+                    isNelO = gameOptions.isNelO;
+                    isForceBid = gameOptions.isForceBid;
+                }
+
                 netCode.NotifyOtherPlayersGameOptions(marksToWin, isNelO, isForceBid);
+            }
+
+            if (gameOptions != null)
+            {
+                Destroy(gameOptions);
             }
         }
 
@@ -107,6 +121,15 @@ namespace Domino42
                         {
                             if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidComplete)
                             {
+                                if (players[CurrentPlayerTurn].BidAmount == 43)
+                                {
+                                    gameState = GameState.Trump;
+                                    //GameFlow();
+                                    Encrypt();
+                                    netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                    netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                                }
                                 if (players.Exists(player => !player.BidComplete))
                                 {
                                     CurrentPlayerTurn = -1;
@@ -330,7 +353,7 @@ namespace Domino42
             {
                 players[CurrentPlayerTurn].BidAmount = amount;
 
-                playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
+                playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
 
                 netCode.NotifyHostPlayerBidSelected(amount);
             }
@@ -407,7 +430,9 @@ namespace Domino42
                     break;
                 }
             }
-            
+
+            int partnerIndex = (WhoBid + 2) % 4;
+
             if (CurrentPlayerTurn == -1)
             {
                 if (NetworkClient.Instance.IsHost)
@@ -419,6 +444,13 @@ namespace Domino42
                     netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
 
                     netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                }
+            }
+            else if (isNelO && Trump == Trump.NELO && CurrentPlayerTurn == partnerIndex)
+            {
+                if (NetworkClient.Instance.IsHost)
+                {
+                    StartCoroutine(PlayNeloSkipTurn(CurrentPlayerTurn));
                 }
             }
             else if (!players[CurrentPlayerTurn].IsAI)
@@ -587,7 +619,7 @@ namespace Domino42
             players[CurrentPlayerTurn].Trump = (Trump)trump;
             Trump = (Trump)trump;
 
-            trumpText.text = trump.ToString();
+            trumpText.text = Trump.ToString();
         }
 
         public void OnDominoSelected(byte selectedDomino)
