@@ -121,6 +121,15 @@ namespace Domino42
                         {
                             if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidComplete)
                             {
+                                if (players[CurrentPlayerTurn].BidAmount == 43)
+                                {
+                                    gameState = GameState.Trump;
+                                    //GameFlow();
+                                    Encrypt();
+                                    netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
+
+                                    netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                                }
                                 if (players.Exists(player => !player.BidComplete))
                                 {
                                     CurrentPlayerTurn = -1;
@@ -344,7 +353,7 @@ namespace Domino42
             {
                 players[CurrentPlayerTurn].BidAmount = amount;
 
-                playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
+                playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
 
                 netCode.NotifyHostPlayerBidSelected(amount);
             }
