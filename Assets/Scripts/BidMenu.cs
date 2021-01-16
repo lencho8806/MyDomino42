@@ -18,16 +18,29 @@ namespace Domino42
 
         void Start()
         {
-            // probably need to reset values...
-            
-
             domino42 = FindObjectOfType<Game>();
 
-            minBid = domino42.players.Max(p => p.BidAmount ?? 30);
+            minBid = domino42.players.Max(p => 
+                p.BidAmount ?? -1
+            );
+            minBid = minBid == -1 ? 30 : (minBid + 1);
             Amount = minBid;
 
             var textChildren = new List<Text>(bidMenuUI.GetComponentsInChildren<Text>());
             textAmount = textChildren.Find(text => text.name == "BidAmountText");
+            
+            if (Amount == 42)
+            {
+                textAmount.text = "1M";
+            }
+            else if (Amount == 43)
+            {
+                textAmount.text = "2M";
+            }
+            else
+            {
+                textAmount.text = Amount.ToString();
+            }
         }
 
         // Update is called once per frame
@@ -173,6 +186,36 @@ namespace Domino42
             bidMenuUI.SetActive(true);
             Time.timeScale = 0f;
             GameIsBid = true;
+
+            if (domino42 != null)
+                Init();
+        }
+
+        public void Init()
+        {
+            minBid = domino42.players.Max(p =>
+                 p.BidAmount ?? -1
+             );
+            minBid = minBid == -1 ? 30 : (minBid + 1);
+            Amount = minBid;
+
+            textAmount.text = BidText(Amount);
+        }
+
+        public string BidText(int amount)
+        {
+            string bidAmountText = amount.ToString();
+
+            if (amount == 42)
+            {
+                bidAmountText = "1M";
+            }
+            else if (amount == 43)
+            {
+                bidAmountText = "2M";
+            }
+
+            return bidAmountText;
         }
     }
 

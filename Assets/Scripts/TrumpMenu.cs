@@ -48,7 +48,7 @@ namespace Domino42
                     //do nothing... min option...
                     break;
                 case -1:
-                    if (domino42.IsNelO && domino42.players[domino42.CurrentPlayerTurn].BidAmount == 42)
+                    if (domino42.IsNelO && domino42.players[domino42.CurrentPlayerTurn].BidAmount >= 42)
                     {
                         Trump--;
                         textAmount.text = "Nel-O";

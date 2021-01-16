@@ -152,7 +152,13 @@ namespace Domino42
                     {
                         if (CurrentPlayerTurn >= 0 && players[CurrentPlayerTurn].BidAmount != null)
                         {
-                            if (players.Exists(player => player.BidAmount == null))
+                            if (players[CurrentPlayerTurn].BidAmount == 43)
+                            {
+                                // end bidding... max bid made...
+                                gameState = GameState.Trump;
+                                GameFlow();
+                            }
+                            else if (players.Exists(player => player.BidAmount == null))
                             {
                                 GameFlow();
                             }
@@ -651,7 +657,8 @@ namespace Domino42
             {
                 players[CurrentPlayerTurn].BidAmount = amount;
                 players[CurrentPlayerTurn].BidComplete = true;
-                playerBidTexts[CurrentPlayerTurn].text = amount.ToString();
+                
+                playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
             }
         }
 
@@ -1105,13 +1112,16 @@ namespace Domino42
 
             yield return new WaitForSeconds(2f);
 
+            int setScoreAmount = CurrentBidAmount == 43 ? 2 : 1;
+            int bidAmount = CurrentBidAmount > 42 ? 42 : CurrentBidAmount.Value;
+
             if (WhoBid % 2 == 0)
             {
                 if (isNelO && Trump == Trump.NELO)
                 {
                     if (RoundScoreUs > 0)
                     {
-                        SetScoreThem += 1;
+                        SetScoreThem += setScoreAmount;
                         SetThemText.text = $"Them: {SetScoreThem}";
                         SetComplete = true;
 
@@ -1119,7 +1129,7 @@ namespace Domino42
                     }
                     else if (players[InitialPlayerTurn].Hand.Count == 0)
                     {
-                        SetScoreUs += 1;
+                        SetScoreUs += setScoreAmount;
                         SetUsText.text = $"Us: {SetScoreUs}";
                         SetComplete = true;
 
@@ -1128,17 +1138,17 @@ namespace Domino42
                 }
                 else
                 {
-                    if (RoundScoreUs >= CurrentBidAmount)
+                    if (RoundScoreUs >= bidAmount)
                     {
-                        SetScoreUs += 1;
+                        SetScoreUs += setScoreAmount;
                         SetUsText.text = $"Us: {SetScoreUs}";
                         SetComplete = true;
 
                         MessageText.text = $"We won the set";
                     }
-                    else if (RoundScoreThem > (42 - CurrentBidAmount))
+                    else if (RoundScoreThem > (42 - bidAmount))
                     {
-                        SetScoreThem += 1;
+                        SetScoreThem += setScoreAmount;
                         SetThemText.text = $"Them: {SetScoreThem}";
                         SetComplete = true;
 
@@ -1152,7 +1162,7 @@ namespace Domino42
                 {
                     if (RoundScoreThem > 0)
                     {
-                        SetScoreUs += 1;
+                        SetScoreUs += setScoreAmount;
                         SetUsText.text = $"Us: {SetScoreUs}";
                         SetComplete = true;
 
@@ -1160,7 +1170,7 @@ namespace Domino42
                     }
                     else if (players[InitialPlayerTurn].Hand.Count == 0)
                     {
-                        SetScoreThem += 1;
+                        SetScoreThem += setScoreAmount;
                         SetThemText.text = $"Them: {SetScoreThem}";
                         SetComplete = true;
 
@@ -1169,15 +1179,15 @@ namespace Domino42
                 }
                 else
                 {
-                    if (RoundScoreThem >= CurrentBidAmount)
+                    if (RoundScoreThem >= bidAmount)
                     {
-                        SetScoreThem += 1;
+                        SetScoreThem += setScoreAmount;
                         SetThemText.text = $"Them: {SetScoreThem}";
                         SetComplete = true;
                     }
-                    else if (RoundScoreUs > (42 - CurrentBidAmount))
+                    else if (RoundScoreUs > (42 - bidAmount))
                     {
-                        SetScoreUs += 1;
+                        SetScoreUs += setScoreAmount;
                         SetUsText.text = $"Us: {SetScoreUs}";
                         SetComplete = true;
                     }
