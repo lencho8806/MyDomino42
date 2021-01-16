@@ -421,7 +421,9 @@ namespace Domino42
                     break;
                 }
             }
-            
+
+            int partnerIndex = (WhoBid + 2) % 4;
+
             if (CurrentPlayerTurn == -1)
             {
                 if (NetworkClient.Instance.IsHost)
@@ -433,6 +435,13 @@ namespace Domino42
                     netCode.ModifyGameData(EncryptedData()); //NEED to Encrypt first
 
                     netCode.NotifyOtherPlayersGameStateChanged(); // GameFlow
+                }
+            }
+            else if (isNelO && Trump == Trump.NELO && CurrentPlayerTurn == partnerIndex)
+            {
+                if (NetworkClient.Instance.IsHost)
+                {
+                    StartCoroutine(PlayNeloSkipTurn(CurrentPlayerTurn));
                 }
             }
             else if (!players[CurrentPlayerTurn].IsAI)
@@ -601,7 +610,7 @@ namespace Domino42
             players[CurrentPlayerTurn].Trump = (Trump)trump;
             Trump = (Trump)trump;
 
-            trumpText.text = trump.ToString();
+            trumpText.text = Trump.ToString();
         }
 
         public void OnDominoSelected(byte selectedDomino)

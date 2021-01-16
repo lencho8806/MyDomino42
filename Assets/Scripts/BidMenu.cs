@@ -12,14 +12,19 @@ namespace Domino42
         private int Amount = 30;
         private Text textAmount;
         private Game domino42;
+        private int minBid = 30;
 
         public GameObject bidMenuUI;
 
         void Start()
         {
             // probably need to reset values...
+            
 
             domino42 = FindObjectOfType<Game>();
+
+            minBid = domino42.players.Max(p => p.BidAmount ?? 30);
+            Amount = minBid;
 
             var textChildren = new List<Text>(bidMenuUI.GetComponentsInChildren<Text>());
             textAmount = textChildren.Find(text => text.name == "BidAmountText");
@@ -44,37 +49,48 @@ namespace Domino42
         public void DecreaseBidAmount()
         {
             Debug.Log("Decrease bid...");
-
-            switch (Amount)
+            
+            if (Amount == -1)
             {
-                case -1:
-                    // do nothing... min...
-                    break;
-                case 30:
-                    // set to pass
-                    Amount = -1;
-                    textAmount.text = "Pass";
-
-                    break;
-                default:
-                    Amount--;
-                    textAmount.text = Amount.ToString();
-                    break;
+                // do nothing... min bid...
+            }
+            else if (Amount == minBid)
+            {
+                Amount = -1;
+                textAmount.text = "Pass";
+            }
+            else if (Amount == 43)
+            {
+                Amount--;
+                textAmount.text = "1M";
+            }
+            else
+            {
+                Amount--;
+                textAmount.text = Amount.ToString();
             }
         }
 
         public void IncreaseBidAmount()
         {
             Debug.Log("Increase bid...");
-
+            
             switch (Amount)
             {
                 case -1:
-                    // do nothing... min...
-                    Amount = 30;
+                    // increase to min bid...
+                    Amount = minBid;
                     textAmount.text = Amount.ToString();
                     break;
+                case 41:
+                    Amount++;
+                    textAmount.text = "1M";
+                    break;
                 case 42:
+                    Amount++;
+                    textAmount.text = "2M";
+                    break;
+                case 43:
                     // do nothing... max...
                     break;
                 default:

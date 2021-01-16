@@ -12,6 +12,7 @@ namespace Domino42
 {
     public enum Trump
     {
+        NELO = -2,
         FOLLOW_ME = -1,
         ZERO,
         ONE,
@@ -28,7 +29,7 @@ namespace Domino42
         //Rules
         protected static int marksToWin = 3;
         public int MarksToWin { get { return marksToWin; } }
-        protected static bool isNelO = false;
+        protected static bool isNelO = true;
         public bool IsNelO { get { return isNelO; } }
         protected static bool isForceBid = true;
         public bool IsForceBid { get { return isForceBid; } }
@@ -737,7 +738,7 @@ namespace Domino42
                 players[CurrentPlayerTurn].Trump = (Trump)trump;
                 Trump = (Trump)trump;
 
-                trumpText.text = trump.ToString();
+                trumpText.text = Trump.ToString();
             }
         }
 
@@ -753,12 +754,18 @@ namespace Domino42
                     break;
                 }
             }
-            
+
+            int partnerIndex = (WhoBid + 2) % 4;
+
             if (CurrentPlayerTurn == -1)
             {
                 //determine Game winner
                 gameState = GameState.RoundWinner;
                 GameFlow();
+            }
+            else if (isNelO && Trump == Trump.NELO && CurrentPlayerTurn == partnerIndex)
+            {
+                StartCoroutine(PlayNeloSkipTurn(CurrentPlayerTurn));
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
@@ -856,6 +863,16 @@ namespace Domino42
             yield return new WaitForSeconds(2f);
         }
 
+        protected IEnumerator PlayNeloSkipTurn(int playerIndex)
+        {
+            MessageText.text = $"{players[CurrentPlayerTurn].name}'s turn is skipped...";
+
+            yield return new WaitForSeconds(2f);
+
+            players[playerIndex].TurnComplete = true;
+            players[playerIndex].SelectedDomino = null;
+        }
+
         public virtual void SelectDominoFromHand(int playerIndex, byte selectedDomino)
         {
             // Verify selected domino is in hand...?
@@ -912,7 +929,7 @@ namespace Domino42
             List<int> playersWithTrump = new List<int>();
             int playerWinnerIndex = -1;
 
-            if (players.Exists(p => p.SelectedDomino.name.Contains(((int)Trump).ToString())))
+            if (players.Exists(p => p.SelectedDomino?.name?.Contains(((int)Trump).ToString()) ?? false))
             {
                 playerWinnerIndex = GetPlayerHandWinner((int)Trump);
             }
@@ -950,7 +967,7 @@ namespace Domino42
             int playerIndex = -1;
             for (int i = 0; i < players.Count; i++)
             {
-                if (players[i].SelectedDomino.name.Contains((trump).ToString()))
+                if (players[i].SelectedDomino?.name?.Contains((trump).ToString()) ?? false)
                 {
                     if (playerIndex == -1)
                     {
@@ -982,9 +999,9 @@ namespace Domino42
 
             players.ForEach(player =>
             {
-                if (player.SelectedDomino.sum % 5 == 0)
+                if (((player.SelectedDomino?.sum ?? 0) % 5) == 0)
                 {
-                    gameScore += player.SelectedDomino.sum;
+                    gameScore += player.SelectedDomino?.sum ?? 0;
                 }
             });
 
@@ -1090,36 +1107,80 @@ namespace Domino42
 
             if (WhoBid % 2 == 0)
             {
-                if (RoundScoreUs >= CurrentBidAmount)
+                if (isNelO && Trump == Trump.NELO)
                 {
-                    SetScoreUs += 1;
-                    SetUsText.text = $"Us: {SetScoreUs}";
-                    SetComplete = true;
+                    if (RoundScoreUs > 0)
+                    {
+                        SetScoreThem += 1;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
 
-                    MessageText.text = $"We won the set";
+                        MessageText.text = $"They won the set";
+                    }
+                    else if (players[InitialPlayerTurn].Hand.Count == 0)
+                    {
+                        SetScoreUs += 1;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+
+                        MessageText.text = $"We won the set";
+                    }
                 }
-                else if (RoundScoreThem > (42 - CurrentBidAmount))
+                else
                 {
-                    SetScoreThem += 1;
-                    SetThemText.text = $"Them: {SetScoreThem}";
-                    SetComplete = true;
+                    if (RoundScoreUs >= CurrentBidAmount)
+                    {
+                        SetScoreUs += 1;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
 
-                    MessageText.text = $"They won the set";
+                        MessageText.text = $"We won the set";
+                    }
+                    else if (RoundScoreThem > (42 - CurrentBidAmount))
+                    {
+                        SetScoreThem += 1;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+
+                        MessageText.text = $"They won the set";
+                    }
                 }
             }
             else
             {
-                if (RoundScoreThem >= CurrentBidAmount)
+                if (isNelO && Trump == Trump.NELO)
                 {
-                    SetScoreThem += 1;
-                    SetThemText.text = $"Them: {SetScoreThem}";
-                    SetComplete = true;
+                    if (RoundScoreThem > 0)
+                    {
+                        SetScoreUs += 1;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+
+                        MessageText.text = $"We won the set";
+                    }
+                    else if (players[InitialPlayerTurn].Hand.Count == 0)
+                    {
+                        SetScoreThem += 1;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+
+                        MessageText.text = $"They won the set";
+                    }
                 }
-                else if (RoundScoreUs > (42 - CurrentBidAmount))
+                else
                 {
-                    SetScoreUs += 1;
-                    SetUsText.text = $"Us: {SetScoreUs}";
-                    SetComplete = true;
+                    if (RoundScoreThem >= CurrentBidAmount)
+                    {
+                        SetScoreThem += 1;
+                        SetThemText.text = $"Them: {SetScoreThem}";
+                        SetComplete = true;
+                    }
+                    else if (RoundScoreUs > (42 - CurrentBidAmount))
+                    {
+                        SetScoreUs += 1;
+                        SetUsText.text = $"Us: {SetScoreUs}";
+                        SetComplete = true;
+                    }
                 }
             }
 
