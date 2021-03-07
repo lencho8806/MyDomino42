@@ -9,6 +9,9 @@ namespace Domino42
     public class BidMenu : MonoBehaviour
     {
         public bool GameIsBid = false;
+        [SerializeField]
+        Slider bidSlider;
+        float previousSliderValue;
         private int Amount = 30;
         private Text textAmount;
         private Game domino42;
@@ -20,11 +23,21 @@ namespace Domino42
         {
             domino42 = FindObjectOfType<Game>();
 
+            previousSliderValue = bidSlider.value;
+
             minBid = domino42.players.Max(p => 
                 p.BidAmount ?? -1
             );
             minBid = minBid == -1 ? 30 : (minBid + 1);
             Amount = minBid;
+
+            previousSliderValue = -1;
+            bidSlider.value = -1;
+            if (minBid >= 30)
+            {
+                previousSliderValue = minBid - 30;
+                bidSlider.value = (float)minBid - 30;
+            }
 
             var textChildren = new List<Text>(bidMenuUI.GetComponentsInChildren<Text>());
             textAmount = textChildren.Find(text => text.name == "BidAmountText");
@@ -62,7 +75,23 @@ namespace Domino42
         public void DecreaseBidAmount()
         {
             Debug.Log("Decrease bid...");
-            
+
+            Decrease();
+
+            if (Amount == -1)
+            {
+                previousSliderValue = bidSlider.value;
+                bidSlider.SetValueWithoutNotify(Amount);
+            }
+            else if (Amount >= 30)
+            {
+                previousSliderValue = bidSlider.value;
+                bidSlider.SetValueWithoutNotify(Amount - 30);
+            }
+        }
+
+        public void Decrease()
+        {
             if (Amount == -1)
             {
                 // do nothing... min bid...
@@ -87,7 +116,23 @@ namespace Domino42
         public void IncreaseBidAmount()
         {
             Debug.Log("Increase bid...");
-            
+
+            Increase();
+
+            if (Amount == -1)
+            {
+                previousSliderValue = bidSlider.value;
+                bidSlider.SetValueWithoutNotify(Amount);
+            }
+            else if (Amount >= 30)
+            {
+                previousSliderValue = bidSlider.value;
+                bidSlider.SetValueWithoutNotify(Amount - 30);
+            }
+        }
+
+        public void Increase()
+        {
             switch (Amount)
             {
                 case -1:
@@ -177,14 +222,14 @@ namespace Domino42
             domino42.BidEnd(Amount);
 
             bidMenuUI.SetActive(false);
-            Time.timeScale = 1f;
+            //Time.timeScale = 1f;
             GameIsBid = false;
         }
 
         public void BidStart()
         {
             bidMenuUI.SetActive(true);
-            Time.timeScale = 0f;
+            //Time.timeScale = 0f;
             GameIsBid = true;
 
             if (domino42 != null)
@@ -200,6 +245,14 @@ namespace Domino42
             Amount = minBid;
 
             textAmount.text = BidText(Amount);
+
+            previousSliderValue = -1;
+            bidSlider.value = -1;
+            if (minBid >= 30)
+            {
+                previousSliderValue = minBid - 30;
+                bidSlider.value = (float) minBid - 30;
+            }
         }
 
         public string BidText(int amount)
@@ -216,6 +269,20 @@ namespace Domino42
             }
 
             return bidAmountText;
+        }
+
+        public void SliderValueChanged(float value)
+        {
+            if (value > previousSliderValue)
+            {
+                Increase();
+            }
+            else if (value < previousSliderValue)
+            {
+                Decrease();
+            }
+
+            previousSliderValue = value;
         }
     }
 
