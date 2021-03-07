@@ -38,6 +38,8 @@ namespace Domino42
         public GameObject dominoPrefab;
         [SerializeField]
         protected DominoAnimator dominoAnimator;
+        [SerializeField]
+        protected PlayerSpotAnimator playerSpotAnimator;
         public List<Player> players = new List<Player>(4);
 
         public readonly List<string> dominoes = new List<string> { "0_0", "1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_3", "4_0", "4_1", "4_2", "4_3", "4_4", "5_0", "5_1", "5_2", "5_3", "5_4", "5_5", "6_0", "6_1", "6_2", "6_3", "6_4", "6_5", "6_6" };
@@ -578,10 +580,15 @@ namespace Domino42
             }
             else if (!players[CurrentPlayerTurn].IsAI)
             {
-                // Player bid
-                MessageText.text = string.Empty;
+                //// Move bid amounts
+                //yield return StartCoroutine(BidPlayerSpotAnimation());
 
-                bidMenu.BidStart();
+                //// Player bid
+                //MessageText.text = string.Empty;
+
+                //bidMenu.BidStart();
+
+                StartCoroutine(StartBid());
             }
             else
             {
@@ -655,11 +662,89 @@ namespace Domino42
         {
             if (gameState == GameState.Bid && CurrentPlayerTurn == 0)
             {
-                players[CurrentPlayerTurn].BidAmount = amount;
-                players[CurrentPlayerTurn].BidComplete = true;
-                
-                playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
+                StartCoroutine(EndBid(amount));
             }
+        }
+
+        IEnumerator StartBid()
+        {
+            // Move bid amounts
+            yield return StartCoroutine(BidPlayerSpotStartAnimation());
+
+            // Player bid
+            MessageText.text = string.Empty;
+
+            bidMenu.BidStart();
+        }
+
+        IEnumerator BidPlayerSpotStartAnimation()
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                Vector2 playerSpotDestination = playerSpots[i].transform.localPosition;
+                Vector2 playerNameDestination = PlayerNames[i].transform.localPosition;
+                switch (i)
+                {
+                    case 1:
+                        playerSpotDestination = new Vector2(-300, playerSpotDestination.y);
+                        playerNameDestination = new Vector2(-300, playerNameDestination.y);
+                        break;
+                    case 2:
+                        playerSpotDestination = new Vector2(playerSpotDestination.x, 180);
+                        playerNameDestination = new Vector2(playerNameDestination.x, 215);
+                        break;
+                    case 3:
+                        playerSpotDestination = new Vector2(300, playerSpotDestination.y);
+                        playerNameDestination = new Vector2(300, playerNameDestination.y);
+                        break;
+                }
+
+                playerSpotAnimator.AddPlayerSpotAnimation(playerSpots[i], playerSpotDestination, false);
+                playerSpotAnimator.AddPlayerSpotAnimation(PlayerNames[i].gameObject, playerNameDestination, false);
+            }
+
+            yield return new WaitForSeconds(0.6f);
+        }
+
+        IEnumerator EndBid(int amount)
+        {
+            // Move bid amounts back
+            yield return StartCoroutine(BidPlayerSpotFinishAnimation());
+
+            //
+            players[CurrentPlayerTurn].BidAmount = amount;
+            players[CurrentPlayerTurn].BidComplete = true;
+
+            playerBidTexts[CurrentPlayerTurn].text = bidMenu.BidText(amount);
+        }
+
+        IEnumerator BidPlayerSpotFinishAnimation()
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                Vector2 playerSpotDestination = playerSpots[i].transform.localPosition;
+                Vector2 playerNameDestination = PlayerNames[i].transform.localPosition;
+                switch (i)
+                {
+                    case 1:
+                        playerSpotDestination = new Vector2(-135, playerSpotDestination.y);
+                        playerNameDestination = new Vector2(-135, playerNameDestination.y);
+                        break;
+                    case 2:
+                        playerSpotDestination = new Vector2(playerSpotDestination.x, 45);
+                        playerNameDestination = new Vector2(playerNameDestination.x, 80);
+                        break;
+                    case 3:
+                        playerSpotDestination = new Vector2(135, playerSpotDestination.y);
+                        playerNameDestination = new Vector2(135, playerNameDestination.y);
+                        break;
+                }
+
+                playerSpotAnimator.AddPlayerSpotAnimation(playerSpots[i], playerSpotDestination, false);
+                playerSpotAnimator.AddPlayerSpotAnimation(PlayerNames[i].gameObject, playerNameDestination, false);
+            }
+
+            yield return new WaitForSeconds(0.6f);
         }
 
         // Trump 
@@ -893,7 +978,7 @@ namespace Domino42
             // Remove domino from hand
             Destroy(selectedDominoGameObject);
             players[playerIndex].Hand.Remove(selectedDomino);
-
+            
             // Move domino to play area
             GameObject newDomino = Instantiate(
                 dominoPrefab,
@@ -901,6 +986,8 @@ namespace Domino42
                 initRot,
                 playerSpots[playerIndex].transform
             );
+            newDomino.GetComponent<SpriteRenderer>().sortingLayerName = "Domino";
+            newDomino.transform.localScale = new Vector3(20, 20, 0);
             newDomino.name = dominoes[selectedDomino];
             newDomino.GetComponent<Selectable>().faceUp = true;
 
